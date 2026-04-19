@@ -1,0 +1,10 @@
+target/
+.m2/
+.claude/settings.local.json
+.qwen/
+bom.xml
+bom.json
+.idea/
+# Gradle build output and caches
+build/
+.gradle/

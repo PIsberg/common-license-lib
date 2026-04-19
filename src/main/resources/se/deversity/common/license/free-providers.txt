@@ -1,0 +1,80 @@
+# Bundled common private / consumer email providers.
+# One lowercase domain per line. Lines starting with # are ignored.
+# Curated — not exhaustive. Consumers can extend via
+# LicenseConfig.Builder#additionalFreeProviders(Set) or override the classifier entirely.
+
+# Google
+gmail.com
+googlemail.com
+
+# Microsoft consumer
+outlook.com
+hotmail.com
+hotmail.co.uk
+live.com
+live.co.uk
+msn.com
+outlook.co.uk
+
+# Yahoo
+yahoo.com
+yahoo.co.uk
+yahoo.co.in
+yahoo.ca
+yahoo.com.au
+yahoo.de
+yahoo.fr
+yahoo.es
+yahoo.it
+ymail.com
+rocketmail.com
+
+# Apple
+icloud.com
+me.com
+mac.com
+
+# Proton
+proton.me
+protonmail.com
+protonmail.ch
+pm.me
+
+# GMX / Web.de / Mail.com / 1und1
+gmx.com
+gmx.net
+gmx.de
+gmx.at
+gmx.ch
+web.de
+mail.com
+
+# AOL
+aol.com
+aol.co.uk
+aim.com
+
+# Russian / CIS
+yandex.com
+yandex.ru
+mail.ru
+rambler.ru
+
+# Other major consumer providers
+zoho.com
+tutanota.com
+tutamail.com
+tuta.io
+fastmail.com
+fastmail.fm
+hushmail.com
+hey.com
+duck.com
+
+# Nordic ISPs commonly used as personal mail
+telia.com
+telia.se
+bredband.net
+comhem.se
+hotmail.se
+live.se
