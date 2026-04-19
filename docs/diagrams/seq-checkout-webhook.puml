@@ -1,0 +1,40 @@
+@startuml seq-checkout-webhook
+skinparam backgroundColor #FAFAFA
+skinparam sequenceArrowThickness 1.5
+skinparam noteBorderColor #999
+skinparam noteBackgroundColor #FFFDE7
+
+title LemonSqueezy Checkout URL & Webhook Verification
+
+actor "Consumer App" as App
+participant "LicenseGate" as Gate
+participant "LemonSqueezyCheckout" as LSC
+participant "LemonSqueezyWebhook" as LSW
+participant "LemonSqueezy\nStorefront" as LS
+
+== Build checkout URL (after a Denied result) ==
+
+App -> Gate : checkoutUrl(email, variantId)
+Gate -> LSC : buildCheckoutUrl(email, variantId, null)
+LSC -> LSC : URL-encode params\nhttps://{store}.lemonsqueezy.com/buy/{variantId}?checkout[email]=...
+LSC --> Gate : URI
+Gate --> App : URI
+
+App -> LS : redirect user to checkout URI
+note right of LS : User completes purchase\nin LemonSqueezy hosted checkout
+
+== Webhook verification (in consumer's HTTP server) ==
+
+LS -> App : POST /webhook\n  X-Signature: <hex>\n  body: <raw JSON>
+
+App -> LSW : verifySignature(rawBody, header, signingSecret)
+LSW -> LSW : HMAC-SHA256(rawBody, secret)\nconstant-time compare
+LSW --> App : true / false
+
+alt signature valid
+  App -> App : parse body, activate license\n(call Keygen to create/activate license key)
+else signature invalid
+  App --> LS : 401 Unauthorized
+end
+
+@enduml

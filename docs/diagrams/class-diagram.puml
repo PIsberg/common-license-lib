@@ -1,0 +1,190 @@
+@startuml class-diagram
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FAFAFA
+skinparam class {
+  BackgroundColor White
+  BorderColor #555
+  ArrowColor #444
+  FontSize 12
+}
+skinparam note {
+  BackgroundColor #FFFDE7
+  BorderColor #CCC
+}
+
+title Common License Lib — Class Diagram
+
+' ─── Public API ─────────────────────────────────────────────────────────────
+package "se.deversity.common.license" #EEF3FF {
+
+  class LicenseGate {
+    - config : LicenseConfig
+    - http : HttpClient
+    - keygen : KeygenValidator
+    - checkout : LemonSqueezyCheckout
+    --
+    + {static} of(config) : LicenseGate
+    + check(email, licenseKey) : LicenseResult
+    + checkoutUrl(email, variantId) : URI
+    + checkoutUrl(email, variantId, customData) : URI
+    + config() : LicenseConfig
+  }
+
+  class LicenseConfig {
+    - keygenAccountId : String
+    - keygenApiKey : String
+    - keygenProductId : String
+    - keygenBaseUri : URI
+    - keygenTimeout : Duration
+    - lemonSqueezyStoreSubdomain : String
+    - lemonSqueezySigningSecret : String
+    - allowOnNetworkError : boolean
+    - mockMode : boolean
+    --
+    + {static} builder() : Builder
+    + emailClassifier() : EmailClassifier
+    + httpClient() : HttpClient
+    + mockMode() : boolean
+    + allowOnNetworkError() : boolean
+  }
+
+  class "LicenseConfig.Builder" as Builder {
+    + keygenAccountId(v) : Builder
+    + keygenApiKey(v) : Builder
+    + keygenProductId(v) : Builder
+    + keygenBaseUri(v) : Builder
+    + keygenTimeout(v) : Builder
+    + lemonSqueezyStoreSubdomain(v) : Builder
+    + lemonSqueezySigningSecret(v) : Builder
+    + additionalFreeProviders(v) : Builder
+    + additionalCommercialProviders(v) : Builder
+    + emailClassifier(v) : Builder
+    + httpClient(v) : Builder
+    + allowOnNetworkError(v) : Builder
+    + mockMode(v) : Builder
+    + build() : LicenseConfig
+  }
+
+  class LicenseException {
+    + LicenseException(message)
+  }
+
+  interface LicenseResult <<sealed>> {
+  }
+
+  class "LicenseResult.Allowed" as Allowed {
+    + reason : AllowedReason
+  }
+
+  class "LicenseResult.Denied" as Denied {
+    + reason : DeniedReason
+    + message : String
+    --
+    + {static} of(reason) : Denied
+  }
+
+  enum AllowedReason {
+    FREE_PROVIDER_EMAIL
+    LICENSE_VALID
+    NETWORK_ERROR_ALLOWED
+    MOCKED_ALLOWED
+  }
+
+  enum DeniedReason {
+    INVALID_EMAIL
+    LICENSE_REQUIRED
+    LICENSE_NOT_FOUND
+    LICENSE_EXPIRED
+    LICENSE_SUSPENDED
+    LICENSE_INVALID
+    NETWORK_ERROR
+  }
+
+  LicenseConfig +-- Builder
+  LicenseResult <|.. Allowed
+  LicenseResult <|.. Denied
+  Allowed --> AllowedReason
+  Denied --> DeniedReason
+}
+
+' ─── Email classification ───────────────────────────────────────────────────
+package "se.deversity.common.license.email" #E8F5E9 {
+
+  interface EmailClassifier <<@FunctionalInterface>> {
+    + classify(email) : EmailClassification
+  }
+
+  class AllowListEmailClassifier {
+    - freeProviders : Set<String>
+    --
+    + classify(email) : EmailClassification
+    + effectiveFreeProviders() : Set<String>
+    - {static} extractDomain(email) : String
+  }
+
+  class FreeProviders {
+    + {static} bundled() : Set<String>
+  }
+
+  enum EmailClassification {
+    FREE_PROVIDER
+    COMMERCIAL
+    INVALID
+  }
+
+  EmailClassifier <|.. AllowListEmailClassifier
+  AllowListEmailClassifier --> FreeProviders : reads
+  AllowListEmailClassifier --> EmailClassification
+  EmailClassifier --> EmailClassification
+}
+
+' ─── Keygen integration ─────────────────────────────────────────────────────
+package "se.deversity.common.license.keygen" #FFF3E0 {
+
+  class KeygenValidator {
+    - http : HttpClient
+    - accountId : String
+    - apiKey : String
+    - baseUri : URI
+    - timeout : Duration
+    --
+    + validate(licenseKey, email) : LicenseResult
+    - mapResponse(resp) : LicenseResult
+  }
+}
+
+' ─── LemonSqueezy helpers ────────────────────────────────────────────────────
+package "se.deversity.common.license.lemonsqueezy" #FCE4EC {
+
+  class LemonSqueezyCheckout {
+    - storeSubdomain : String
+    --
+    + buildCheckoutUrl(email, variantId, customData) : URI
+  }
+
+  class LemonSqueezyWebhook {
+    + {static} verifySignature(rawBody, signatureHex, secret) : boolean
+  }
+}
+
+' ─── Internal ───────────────────────────────────────────────────────────────
+package "se.deversity.common.license.internal" #F3E5F5 {
+  class Json <<internal>> {
+    + {static} parse(src) : Object
+    + {static} get(root, path...) : Object
+    + {static} escape(s) : String
+  }
+}
+
+' ─── Cross-package relationships ─────────────────────────────────────────────
+LicenseGate --> LicenseConfig : configured by
+LicenseGate --> LicenseResult : returns
+LicenseGate --> KeygenValidator : delegates validation
+LicenseGate --> LemonSqueezyCheckout : delegates checkout URL
+LicenseGate --> EmailClassifier : uses
+LicenseConfig --> EmailClassifier : holds
+KeygenValidator --> LicenseResult : produces
+KeygenValidator --> Json : parses response via
+Builder ..> LicenseConfig : builds
+
+@enduml
