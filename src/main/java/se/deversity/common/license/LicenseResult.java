@@ -47,7 +47,9 @@ public sealed interface LicenseResult {
         /** A license key was supplied and Keygen said it's valid. */
         LICENSE_VALID,
         /** Network failed but the consumer opted in to fail-open. */
-        NETWORK_ERROR_ALLOWED
+        NETWORK_ERROR_ALLOWED,
+        /** Mock mode enabled - always allowed for testing. */
+        MOCKED_ALLOWED
     }
 
     /** Structured reason a {@link Denied} was issued. */

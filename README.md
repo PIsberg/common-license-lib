@@ -69,12 +69,14 @@ Network errors default to **fail-closed** (`Denied(NETWORK_ERROR)`). Opt into
 fail-open via `LicenseConfig.Builder#allowOnNetworkError(true)` if that's the
 right tradeoff for your app.
 
-## Configuration — multi-tenant by consumer
+### Configuration — multi-tenant by consumer
 
 Every consumer app that embeds this library passes its own Keygen and
 LemonSqueezy credentials via `LicenseConfig`. Nothing is hard-coded and there
 is no shared global state — one consumer can run multiple `LicenseGate`
 instances against different Keygen accounts in the same JVM.
+
+For a detailed walkthrough on setting up your accounts, finding your API keys, and the customer license acquisition flow, see the **[License Gating Guide](docs/LICENSE_GUIDE.md)**.
 
 ### Extend the free-provider allow-list
 

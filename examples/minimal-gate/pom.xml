@@ -6,7 +6,7 @@
 
     <groupId>se.deversity.common.examples</groupId>
     <artifactId>minimal-gate</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <packaging>jar</packaging>
 
     <name>common-license-lib example: minimal-gate</name>
@@ -15,7 +15,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <common-license-lib.version>0.1.0</common-license-lib.version>
+        <common-license-lib.version>0.2.0</common-license-lib.version>
         <junit.jupiter.version>5.11.3</junit.jupiter.version>
     </properties>
 

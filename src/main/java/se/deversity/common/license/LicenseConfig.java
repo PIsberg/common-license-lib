@@ -34,6 +34,7 @@ public final class LicenseConfig {
     private final EmailClassifier emailClassifier;
     private final HttpClient httpClient;
     private final boolean allowOnNetworkError;
+    private final boolean mockMode;
 
     private LicenseConfig(Builder b) {
         this.keygenAccountId = b.keygenAccountId;
@@ -51,6 +52,7 @@ public final class LicenseConfig {
 
         this.httpClient = b.httpClient;
         this.allowOnNetworkError = b.allowOnNetworkError;
+        this.mockMode = b.mockMode;
     }
 
     public String keygenAccountId()            { return keygenAccountId; }
@@ -63,6 +65,7 @@ public final class LicenseConfig {
     public EmailClassifier emailClassifier()   { return emailClassifier; }
     public HttpClient httpClient()             { return httpClient; }
     public boolean allowOnNetworkError()       { return allowOnNetworkError; }
+    public boolean mockMode()                  { return mockMode; }
 
     public static Builder builder() {
         return new Builder();
@@ -97,6 +100,7 @@ public final class LicenseConfig {
 
         private HttpClient httpClient;
         private boolean allowOnNetworkError;
+        private boolean mockMode;
 
         private Builder() {
         }
@@ -144,12 +148,22 @@ public final class LicenseConfig {
             return this;
         }
 
+        /**
+         * When {@code true}, the gate returns {@link Allowed} (mocked) without network calls.
+         */
+        public Builder mockMode(boolean v) {
+            this.mockMode = v;
+            return this;
+        }
+
         public LicenseConfig build() {
             if (keygenAccountId == null || keygenAccountId.isBlank()) {
-                throw new LicenseException("keygenAccountId is required");
+                if (!mockMode) throw new LicenseException("keygenAccountId is required");
+                else keygenAccountId = "mocked";
             }
             if (keygenApiKey == null || keygenApiKey.isBlank()) {
-                throw new LicenseException("keygenApiKey is required");
+                if (!mockMode) throw new LicenseException("keygenApiKey is required");
+                else keygenApiKey = "mocked";
             }
             return new LicenseConfig(this);
         }
