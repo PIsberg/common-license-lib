@@ -57,6 +57,9 @@ public final class LicenseGate {
      * @param licenseKey  license key from Keygen; may be {@code null} (free-email users don't need one)
      */
     public LicenseResult check(String email, String licenseKey) {
+        if (config.mockMode()) {
+            return new LicenseResult.Allowed(LicenseResult.AllowedReason.MOCKED_ALLOWED);
+        }
         EmailClassification cls = config.emailClassifier().classify(email);
         return switch (cls) {
             case INVALID -> LicenseResult.Denied.of(LicenseResult.DeniedReason.INVALID_EMAIL);
