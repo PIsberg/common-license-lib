@@ -1,0 +1,85 @@
+@startuml seq-check
+skinparam backgroundColor #FAFAFA
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceParticipant underline
+skinparam noteBorderColor #999
+skinparam noteBackgroundColor #FFFDE7
+
+title LicenseGate.check() — Full Sequence
+
+actor "Consumer App" as App
+participant "LicenseGate" as Gate
+participant "LicenseConfig" as Cfg
+participant "EmailClassifier\n(AllowListEmailClassifier)" as Cls
+participant "FreeProviders" as FP
+participant "KeygenValidator" as KV
+participant "Keygen API\n(HTTPS)" as Keygen
+
+App -> Gate : check(email, licenseKey)
+
+alt mockMode == true
+  Gate --> App : Allowed(MOCKED_ALLOWED)
+end
+
+Gate -> Cfg : emailClassifier()
+Gate -> Cls : classify(email)
+Cls -> Cls : extractDomain(email)
+
+alt domain is null / malformed
+  Cls --> Gate : INVALID
+  Gate --> App : Denied(INVALID_EMAIL)
+end
+
+Cls -> FP : bundled()
+note right of FP : gmail, outlook, icloud,\nprotonmail, yahoo, gmx, aol…
+
+alt domain in freeProviders set
+  Cls --> Gate : FREE_PROVIDER
+  Gate --> App : Allowed(FREE_PROVIDER_EMAIL)
+else domain not in free set
+  Cls --> Gate : COMMERCIAL
+end
+
+Gate -> Gate : checkCommercial(email, licenseKey)
+
+alt licenseKey is null or blank
+  Gate --> App : Denied(LICENSE_REQUIRED)
+end
+
+Gate -> KV : validate(licenseKey, email)
+
+KV -> Keygen : POST /v1/accounts/{id}/licenses/actions/validate-key\n  body: {meta:{key:..., scope:{email:...}}}\n  Authorization: Bearer <apiKey>
+
+alt HTTP / IO error
+  Keygen --> KV : (exception / timeout)
+  KV --> Gate : Denied(NETWORK_ERROR)
+
+  alt allowOnNetworkError == true
+    Gate --> App : Allowed(NETWORK_ERROR_ALLOWED)
+  else
+    Gate --> App : Denied(NETWORK_ERROR)
+  end
+
+else HTTP 404
+  Keygen --> KV : 404
+  KV --> Gate : Denied(LICENSE_NOT_FOUND)
+  Gate --> App : Denied(LICENSE_NOT_FOUND)
+
+else HTTP 401 / 403 / 429 / 5xx
+  Keygen --> KV : error status
+  KV --> Gate : Denied(NETWORK_ERROR)
+  Gate --> App : Denied(NETWORK_ERROR)
+
+else HTTP 200 — meta.valid = true
+  Keygen --> KV : 200 {meta:{valid:true,...}}
+  KV --> Gate : Allowed(LICENSE_VALID)
+  Gate --> App : Allowed(LICENSE_VALID)
+
+else HTTP 200 — meta.valid = false
+  Keygen --> KV : 200 {meta:{valid:false, code:"EXPIRED"|"SUSPENDED"|...}}
+  KV -> KV : mapResponse(): map code → DeniedReason
+  KV --> Gate : Denied(LICENSE_EXPIRED | LICENSE_SUSPENDED | LICENSE_INVALID)
+  Gate --> App : Denied(...)
+end
+
+@enduml
