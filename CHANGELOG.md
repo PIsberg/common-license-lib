@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-02
+
+First release under PolyForm Noncommercial. Versions 0.2.0 and 0.2.1 remain published under
+PolyForm Free Trial and are not affected — Maven Central artifacts are immutable.
+
 ### Added
 - VibeTags compile-time guardrails (`se.deversity.vibetags:vibetags-processor:1.0.0-RC8`,
   compile scope only). Annotations on the source declare the invariants that were previously
