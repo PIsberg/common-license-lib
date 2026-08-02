@@ -85,8 +85,8 @@ mavenPublishing {
 
         licenses {
             license {
-                name = "PolyForm Free Trial License 1.0.0"
-                url = "https://polyformproject.org/licenses/free-trial/1.0.0/"
+                name = "PolyForm Noncommercial License 1.0.0"
+                url = "https://polyformproject.org/licenses/noncommercial/1.0.0/"
                 distribution = "repo"
             }
         }

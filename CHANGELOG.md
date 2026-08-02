@@ -17,8 +17,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `docs/releasing.md`, so `CLAUDE.md` links to detail instead of restating it.
 - `KeygenValidator` constructor overload taking a `productId`. The 5-argument constructor is
   retained and delegates with `productId = null`, so this is source- and binary-compatible.
+- `LICENSE-COMMERCIAL.md` — draft terms for the commercial license the Noncommercial license
+  points at. Tiers, term, scope and the redistribution/OEM case are written down; prices, support
+  commitment and governing law are marked TBD and it has not had legal review.
+- `docs/SELLING_THIS_LIBRARY.md` — the LemonSqueezy and Keygen dashboard setup needed to make the
+  commercial license purchasable, and why the library deliberately does not gate itself.
 
 ### Changed
+- **License: PolyForm Free Trial 1.0.0 to PolyForm Noncommercial 1.0.0.** Free Trial grants only
+  32 days, and only for demonstration, testing and evaluation. That is the wrong basis for a
+  library other projects depend on: `async-test-lib` is published under PolyForm Noncommercial
+  and promises "free for non-commercial use", but pulls this library onto every consumer's
+  runtime classpath, so its noncommercial users lost their license to the transitive dependency
+  on day 33. Noncommercial has no time limit and matches the parent project, so the free tier is
+  now coherent. Commercial use still requires a separate license, so nothing is given away.
+  Applies from the next release; 0.2.0 and 0.2.1 remain published under Free Trial.
 - JUnit 5.11.3 / 6.1.1 to 6.1.2 across the library, the consumer fixture and the examples.
 - Gradle wrapper 8.13 to 9.6.1; `com.vanniktech.maven.publish` 0.30.0 to 0.37.0.
 - CycloneDX Maven plugin 2.9.2 to 2.9.3; compiler plugin 3.13.0 to 3.15.0 and surefire 3.5.2
@@ -42,6 +55,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.claude/common-license-lib.md`. It duplicated `CLAUDE.md`, was never loaded into context by
   any tool, and named the artifact `se.deversity.common:license-lib`, which does not exist. Its
   unique content moved into `docs/invariants.md` and `docs/common-tasks.md`.
+- The `Copyright Notice:` example block under *Notices* in `LICENSE`. The `Copyright Notice:` line
+  at the top of the file is the one that governs; the example restated it and was a place for a
+  stale address to hide.
 
 ## [0.2.1] - 2026-04-19
 

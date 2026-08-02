@@ -2,7 +2,7 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/se.deversity.common/common-license-lib.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/se.deversity.common/common-license-lib)
 ![Java 21+](https://img.shields.io/badge/Java-21%2B-blue)
-[![License: PolyForm Free Trial 1.0.0](https://img.shields.io/badge/License-PolyForm%20Free%20Trial%201.0.0-blue.svg)](https://polyformproject.org/licenses/free-trial/1.0.0/)
+[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-blue.svg)](https://polyformproject.org/licenses/noncommercial/1.0.0/)
 
 A drop-in **JVM license gate** designed for distributing software under
 [PolyForm Commercial-style](https://polyformproject.org/licenses/) terms.
@@ -78,6 +78,10 @@ instances against different Keygen accounts in the same JVM.
 
 For a detailed walkthrough on setting up your accounts, finding your API keys, and the customer license acquisition flow, see the **[License Gating Guide](docs/LICENSE_GUIDE.md)**.
 
+If you want to sell a commercial license for your own library the same way, the setup is written
+down in **[Selling this library](docs/SELLING_THIS_LIBRARY.md)** — it documents the flow used for
+this project's own [commercial license](LICENSE-COMMERCIAL.md).
+
 ### Extend the free-provider allow-list
 
 ```java
@@ -144,11 +148,18 @@ from timing attacks.
 | Cutting and publishing a release | [docs/releasing.md](docs/releasing.md) |
 | Maven Central and GPG setup | [docs/MAVEN_CENTRAL_SETUP.md](docs/MAVEN_CENTRAL_SETUP.md) |
 | End-user and admin licensing flow | [docs/LICENSE_GUIDE.md](docs/LICENSE_GUIDE.md) |
+| Selling a commercial license for your own library | [docs/SELLING_THIS_LIBRARY.md](docs/SELLING_THIS_LIBRARY.md) |
+| This project's own commercial terms | [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md) |
 
 ## License
 
-[PolyForm Free Trial License 1.0.0](https://polyformproject.org/licenses/free-trial/1.0.0/).
+[PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/).
 
-> **Note:** the *library itself* is published under PolyForm Free Trial for
-> evaluation. Your downstream usage terms (what you gate with it in *your* app)
-> are up to you — the library just provides the mechanism.
+Free for any noncommercial purpose, including hobby projects, personal study, and use by
+charitable, educational, public research, and government organisations.
+
+Commercial use requires a separate license — see
+[LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md), or contact isberg.peter+cll@gmail.com.
+
+> **Note:** this covers the *library itself*. What you gate with it in *your* app is a
+> separate question — the library just provides the mechanism.
