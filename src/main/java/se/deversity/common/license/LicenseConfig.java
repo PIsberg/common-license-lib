@@ -3,6 +3,10 @@ package se.deversity.common.license;
 import se.deversity.common.license.email.AllowListEmailClassifier;
 import se.deversity.common.license.email.EmailClassifier;
 
+import se.deversity.vibetags.annotations.AIImmutable;
+import se.deversity.vibetags.annotations.AIPrivacy;
+import se.deversity.vibetags.annotations.AIPublicAPI;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.time.Duration;
@@ -20,15 +24,20 @@ import java.util.Set;
  * <p>Instances are built via {@link #builder()} and are safe to share across threads.
  * {@link #toString()} redacts credentials.
  */
+@AIPublicAPI(reason = "Published builder API; consumer code constructs this directly.")
+@AIImmutable(note = "Every field is final and the instance is shared across threads by LicenseGate. "
+    + "Never add a setter or a non-final field — add a builder method instead.")
 public final class LicenseConfig {
 
     private final String keygenAccountId;
+    @AIPrivacy(reason = "Keygen bearer token. toString() redacts it deliberately; keep it that way.")
     private final String keygenApiKey;
     private final String keygenProductId;
     private final URI keygenBaseUri;
     private final Duration keygenTimeout;
 
     private final String lemonSqueezyStoreSubdomain;
+    @AIPrivacy(reason = "LemonSqueezy webhook signing secret; holding it is enough to forge a purchase event.")
     private final String lemonSqueezySigningSecret;
 
     private final EmailClassifier emailClassifier;

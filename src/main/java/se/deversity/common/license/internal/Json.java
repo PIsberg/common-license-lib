@@ -5,6 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import se.deversity.vibetags.annotations.AIContext;
+
 /**
  * Minimal, dependency-free JSON parser and string escaper.
  *
@@ -18,6 +20,12 @@ import java.util.Map;
  *
  * <p><strong>This is an internal API.</strong> Not for consumer use.
  */
+@AIContext(
+    focus = "Internal, not public API. It exists only so the library can ship zero runtime dependencies "
+        + "while reading a handful of fields from Keygen's validate-key response. Keep it small; do not "
+        + "widen it into a general-purpose library or expose it from the license package.",
+    avoids = "Jackson, Gson, org.json, javax.json — adding any of them defeats the reason this class exists"
+)
 public final class Json {
 
     private Json() {

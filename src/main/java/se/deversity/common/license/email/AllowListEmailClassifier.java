@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import se.deversity.vibetags.annotations.AIContext;
+
 /**
  * Default {@link EmailClassifier}: an address is {@link EmailClassification#FREE_PROVIDER}
  * iff its normalized domain is in the effective free-provider set — the bundled list
@@ -15,6 +17,12 @@ import java.util.Set;
  * <p>Normalization: lowercase, trim, strip a {@code +tag} from the local part (although
  * classification is domain-only), punycode IDN domains via {@link IDN#toASCII(String)}.
  */
+@AIContext(
+    focus = "Precedence is load-bearing: additionalCommercialProviders is subtracted after "
+        + "additionalFreeProviders is unioned in, so a domain named in both is COMMERCIAL. "
+        + "Reordering those two steps silently gives paying domains a free pass.",
+    avoids = "Regex-based email parsing; case-sensitive domain comparison; skipping IDN.toASCII normalisation"
+)
 public final class AllowListEmailClassifier implements EmailClassifier {
 
     private final Set<String> freeProviders;

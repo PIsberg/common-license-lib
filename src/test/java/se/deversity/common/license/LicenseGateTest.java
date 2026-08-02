@@ -10,7 +10,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,6 +22,8 @@ class LicenseGateTest {
     private URI baseUri;
     private volatile int responseStatus;
     private volatile String responseBody;
+
+    private final AtomicReference<String> lastRequestBody = new AtomicReference<>();
 
     @BeforeEach
     void start() throws IOException {
@@ -36,6 +40,7 @@ class LicenseGateTest {
 
     private void handle(HttpExchange ex) throws IOException {
         try (ex) {
+            lastRequestBody.set(new String(ex.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
             byte[] body = responseBody == null ? new byte[0] : responseBody.getBytes();
             ex.sendResponseHeaders(responseStatus, body.length);
             try (OutputStream os = ex.getResponseBody()) {
@@ -85,6 +90,24 @@ class LicenseGateTest {
         LicenseResult r = newGate(false).check("bob@acme-corp.com", "KEY-OK");
         assertEquals(LicenseResult.AllowedReason.LICENSE_VALID,
             ((LicenseResult.Allowed) r).reason());
+    }
+
+    @Test
+    void configuredProductIdReachesTheKeygenRequest() {
+        responseStatus = 200;
+        responseBody = "{\"meta\":{\"valid\":true,\"code\":\"VALID\"}}";
+
+        LicenseGate gate = LicenseGate.of(LicenseConfig.builder()
+            .keygenAccountId("acct_x")
+            .keygenApiKey("api_key_x")
+            .keygenProductId("prod_x")
+            .keygenBaseUri(baseUri)
+            .keygenTimeout(Duration.ofSeconds(3))
+            .build());
+
+        gate.check("bob@acme-corp.com", "KEY-OK");
+
+        assertTrue(lastRequestBody.get().contains("\"product\":\"prod_x\""), lastRequestBody.get());
     }
 
     @Test

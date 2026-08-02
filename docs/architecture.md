@@ -101,13 +101,24 @@ The recommended pattern is to instantiate one `LicenseGate` at application start
 
 | Technique | Where |
 |---|---|
-| `LicenseConfig.mockMode(true)` | Unit tests that must not hit the network — gate always returns `Allowed(MOCKED_ALLOWED)` |
-| Injected `HttpClient` via `LicenseConfig.Builder#httpClient(mock)` | `KeygenValidatorTest` — feeds canned HTTP responses |
+| Loopback `com.sun.net.httpserver.HttpServer` on `127.0.0.1:0`, with `keygenBaseUri(...)` aimed at it | `KeygenValidatorTest`, `LicenseGateTest` — serves canned Keygen bodies through the real `HttpClient` path |
 | `AllowListEmailClassifierTest` | Exercises domain normalisation, IDN, and list overrides in isolation |
 | `consumer-fixture/` (separate Maven project) | Smoke-tests the library from the outside as a consumer dependency would see it |
+
+`LicenseConfig.mockMode(true)` and the injectable `httpClient(...)` are consumer-facing features
+that no test exercises. Nothing currently fails if either regresses.
+
+Commands and the CI matrix are in [build-and-test.md](build-and-test.md).
 
 ---
 
 ## Publishing
 
-Coordinates: `se.deversity.common:common-license-lib`. Version is managed in `gradle.properties`. The primary build is Gradle; a `pom.xml` is maintained in parallel for Maven-native consumers. Publishing to Maven Central uses the `com.vanniktech.maven.publish` plugin with in-memory GPG signing (`signingInMemoryKey` Gradle property).
+Coordinates: `se.deversity.common:common-license-lib`. Releases are cut by pushing a `v*` tag,
+which `publish.yml` deploys to Maven Central with Maven; `build.gradle.kts` configures
+`com.vanniktech.maven.publish` as a parallel path for local or manual publishing, signing only
+when the `signingInMemoryKey` Gradle property is set.
+
+The version is duplicated across `pom.xml`, `gradle.properties`, the two downstream modules,
+`README.md` and `CHANGELOG.md`, and nothing in CI compares them. See
+[releasing.md](releasing.md).

@@ -9,6 +9,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import se.deversity.vibetags.annotations.AIKeepInSync;
+
 /**
  * Access to the library's bundled set of common private / consumer email providers
  * (gmail, outlook, yahoo, icloud, protonmail, …).
@@ -19,6 +21,11 @@ import java.util.Set;
  */
 public final class FreeProviders {
 
+    @AIKeepInSync(
+        mirrors = {"src/main/resources/se/deversity/common/license/free-providers.txt"},
+        reason = "The constant is the only reference to that classpath resource. Move or rename either "
+            + "one alone and loadBundled() throws at class-initialisation time, taking every gate down.",
+        enforcedBy = "AllowListEmailClassifierTest#bundledSetIsNonTrivial")
     private static final String RESOURCE = "/se/deversity/common/license/free-providers.txt";
     private static final Set<String> BUNDLED = loadBundled();
 

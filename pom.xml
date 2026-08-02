@@ -44,7 +44,8 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <junit.jupiter.version>6.1.1</junit.jupiter.version>
+        <junit.jupiter.version>6.1.2</junit.jupiter.version>
+        <vibetags.version>1.0.0-RC8</vibetags.version>
         <!-- Plugin versions -->
         <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
@@ -52,11 +53,23 @@
         <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
         <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
         <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
-        <cyclonedx-maven-plugin.version>2.9.2</cyclonedx-maven-plugin.version>
+        <cyclonedx-maven-plugin.version>2.9.3</cyclonedx-maven-plugin.version>
         <central-publishing-maven-plugin.version>0.11.0</central-publishing-maven-plugin.version>
     </properties>
 
     <dependencies>
+        <!--
+            Compile-time only. VibeTags annotations are RetentionPolicy.SOURCE, so nothing
+            reaches the jar and the library keeps its zero-runtime-dependency guarantee.
+            The processor rewrites the VIBETAGS-managed regions of CLAUDE.md and the
+            per-class rule files under .claude/rules/ on every compile.
+        -->
+        <dependency>
+            <groupId>se.deversity.vibetags</groupId>
+            <artifactId>vibetags-processor</artifactId>
+            <version>${vibetags.version}</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -85,6 +98,10 @@
                 <version>${maven-compiler-plugin.version}</version>
                 <configuration>
                     <encoding>UTF-8</encoding>
+                    <compilerArgs>
+                        <!-- H1 used by the generated llms.txt / llms-full.txt, if opted in. -->
+                        <arg>-Avibetags.project=common-license-lib</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
             <plugin>

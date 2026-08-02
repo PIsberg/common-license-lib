@@ -8,3 +8,10 @@ bom.json
 # Gradle build output and caches
 build/
 .gradle/
+
+# VibeTags generated build state. The guardrails themselves (the managed region of
+# CLAUDE.md and the files under .claude/rules/) are committed on purpose, so a
+# reviewer sees them change.
+.vibetags-mod-*
+.vibetags-cache
+vibetags.log

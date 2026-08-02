@@ -22,14 +22,14 @@ A drop-in **JVM license gate** designed for distributing software under
 <dependency>
   <groupId>se.deversity.common</groupId>
   <artifactId>common-license-lib</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.1</version>
 </dependency>
 ```
 
 ### Gradle (Kotlin DSL)
 
 ```kotlin
-implementation("se.deversity.common:common-license-lib:0.1.0")
+implementation("se.deversity.common:common-license-lib:0.2.1")
 ```
 
 ## Quick start
@@ -136,6 +136,20 @@ from timing attacks.
 ```bash
 ./gradlew build      # or: mvn clean verify
 ```
+
+## Documentation
+
+| Topic | File |
+| :--- | :--- |
+| Types, flow and sequence diagrams | [docs/architecture.md](docs/architecture.md) |
+| Build, test and CI commands | [docs/build-and-test.md](docs/build-and-test.md) |
+| Design constraints and why they exist | [docs/invariants.md](docs/invariants.md) |
+| Recipes for the usual changes | [docs/common-tasks.md](docs/common-tasks.md) |
+| Cutting and publishing a release | [docs/releasing.md](docs/releasing.md) |
+| Maven Central and GPG setup | [docs/MAVEN_CENTRAL_SETUP.md](docs/MAVEN_CENTRAL_SETUP.md) |
+| End-user and admin licensing flow | [docs/LICENSE_GUIDE.md](docs/LICENSE_GUIDE.md) |
+| Selling a commercial license for your own library | [docs/SELLING_THIS_LIBRARY.md](docs/SELLING_THIS_LIBRARY.md) |
+| This project's own commercial terms | [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md) |
 
 ## License
 

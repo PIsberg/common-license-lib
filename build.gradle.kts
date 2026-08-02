@@ -4,7 +4,7 @@ import org.gradle.external.javadoc.CoreJavadocOptions
 plugins {
     `java-library`
     jacoco
-    id("com.vanniktech.maven.publish") version "0.30.0"
+    id("com.vanniktech.maven.publish") version "0.37.0"
 }
 
 java {
@@ -16,12 +16,31 @@ repositories {
     mavenCentral()
 }
 
-val junitVersion = "5.11.3"
+val junitVersion = "6.1.2"
+val vibetagsVersion = "1.0.0-RC8"
 
 dependencies {
+    // Compile-time only. VibeTags annotations are RetentionPolicy.SOURCE, so nothing
+    // reaches the jar and the library keeps its zero-runtime-dependency guarantee.
+    compileOnly("se.deversity.vibetags:vibetags-processor:$vibetagsVersion")
+    annotationProcessor("se.deversity.vibetags:vibetags-processor:$vibetagsVersion")
+
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:$junitVersion")
+}
+
+tasks.withType<JavaCompile> {
+    options.compilerArgs.addAll(
+        listOf(
+            // Without an explicit root the processor resolves it from the JVM working
+            // directory, which under Gradle is the daemon's directory, not the project.
+            "-Avibetags.root=${rootDir}",
+            // H1 used by the generated llms.txt / llms-full.txt, if opted in.
+            "-Avibetags.project=common-license-lib",
+        )
+    )
 }
 
 tasks.test {
@@ -44,7 +63,8 @@ tasks.withType<Javadoc> {
 }
 
 mavenPublishing {
-    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
+    // The SonatypeHost argument is gone in 0.37.0 — the Central Portal is the only host.
+    publishToMavenCentral(automaticRelease = true)
 
     if (providers.gradleProperty("signingInMemoryKey").isPresent) {
         signAllPublications()

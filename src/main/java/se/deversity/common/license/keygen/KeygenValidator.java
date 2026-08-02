@@ -14,6 +14,10 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 
+import se.deversity.vibetags.annotations.AIAudit;
+import se.deversity.vibetags.annotations.AIContext;
+import se.deversity.vibetags.annotations.AISecure;
+
 /**
  * Thin online validator against Keygen's
  * <a href="https://keygen.sh/docs/api/licenses/#licenses-actions-validate-key">validate-key</a>
@@ -26,15 +30,25 @@ import java.util.Objects;
  * {@link LicenseResult.Denied} with {@link DeniedReason#NETWORK_ERROR}. Consumers
  * that want fail-open must opt in at the {@code LicenseGate} level.
  */
+@AISecure(aspect = "license validation")
+@AIAudit(checkFor = {"Authentication Bypass", "Credential leakage in exception messages"})
+@AIContext(
+    focus = "Fail closed. Every transport or authorization failure maps to Denied(NETWORK_ERROR); "
+        + "only meta.valid=true produces Allowed. Fail-open is the caller's decision, not this class's.",
+    avoids = "Jackson, Gson, org.json, OkHttp, Apache HttpClient — the library ships zero runtime dependencies"
+)
 public final class KeygenValidator {
 
     private final HttpClient http;
     private final String accountId;
     private final String apiKey;
+    private final String productId;
     private final URI baseUri;
     private final Duration timeout;
 
     /**
+     * Validator with no product scope. Equivalent to passing {@code null} for {@code productId}.
+     *
      * @param http       shared HTTP client (the caller owns lifecycle)
      * @param accountId  Keygen account UUID or slug
      * @param apiKey     admin or product token (passed as a Bearer token)
@@ -42,20 +56,41 @@ public final class KeygenValidator {
      * @param timeout    per-request timeout
      */
     public KeygenValidator(HttpClient http, String accountId, String apiKey, URI baseUri, Duration timeout) {
+        this(http, accountId, apiKey, null, baseUri, timeout);
+    }
+
+    /**
+     * @param http       shared HTTP client (the caller owns lifecycle)
+     * @param accountId  Keygen account UUID or slug
+     * @param apiKey     admin or product token (passed as a Bearer token)
+     * @param productId  Keygen product UUID or slug; when non-null the validation is scoped to it
+     *                   via {@code meta.scope.product}, so a key issued for another product of the
+     *                   same account is rejected. May be {@code null}.
+     * @param baseUri    typically {@code https://api.keygen.sh}
+     * @param timeout    per-request timeout
+     */
+    public KeygenValidator(HttpClient http, String accountId, String apiKey, String productId,
+                           URI baseUri, Duration timeout) {
         this.http = Objects.requireNonNull(http, "http");
         this.accountId = Objects.requireNonNull(accountId, "accountId");
         this.apiKey = Objects.requireNonNull(apiKey, "apiKey");
+        this.productId = productId;
         this.baseUri = Objects.requireNonNull(baseUri, "baseUri");
         this.timeout = Objects.requireNonNull(timeout, "timeout");
     }
 
     /**
-     * Validate {@code licenseKey}, scoped to {@code email}. Returns the corresponding
+     * Validate {@code licenseKey}, scoped to {@code email} and — when the validator was built with
+     * one — to the configured product. Returns the corresponding
      * {@link LicenseResult.Allowed} / {@link LicenseResult.Denied}.
      */
     public LicenseResult validate(String licenseKey, String email) {
+        String productScope = productId == null || productId.isBlank()
+            ? ""
+            : ",\"product\":\"" + Json.escape(productId) + "\"";
+
         String body = "{\"meta\":{\"key\":\"" + Json.escape(licenseKey) + "\""
-            + ",\"scope\":{\"email\":\"" + Json.escape(email) + "\"}}}";
+            + ",\"scope\":{\"email\":\"" + Json.escape(email) + "\"" + productScope + "}}}";
 
         URI uri = baseUri.resolve("/v1/accounts/" + accountId
             + "/licenses/actions/validate-key");

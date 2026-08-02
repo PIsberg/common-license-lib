@@ -4,6 +4,9 @@ import se.deversity.common.license.email.EmailClassification;
 import se.deversity.common.license.keygen.KeygenValidator;
 import se.deversity.common.license.lemonsqueezy.LemonSqueezyCheckout;
 
+import se.deversity.vibetags.annotations.AIPublicAPI;
+import se.deversity.vibetags.annotations.AIThreadSafe;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.util.Map;
@@ -23,6 +26,13 @@ import java.util.Objects;
  *
  * <p>Thread-safe: holds only immutable config + a shared {@link HttpClient}.
  */
+@AIPublicAPI(reason = "Published to Maven Central; downstream apps bind to check() and checkoutUrl(). "
+    + "Changes must stay additive and backward-compatible.")
+@AIThreadSafe(
+    strategy = AIThreadSafe.Strategy.IMMUTABLE,
+    note = "One instance per consumer app, reused for the process lifetime. All fields are final and "
+        + "the shared HttpClient is itself thread-safe. Do not add mutable state or per-call caching."
+)
 public final class LicenseGate {
 
     private final LicenseConfig config;
@@ -37,6 +47,7 @@ public final class LicenseGate {
             http,
             config.keygenAccountId(),
             config.keygenApiKey(),
+            config.keygenProductId(),
             config.keygenBaseUri(),
             config.keygenTimeout());
         this.checkout = config.lemonSqueezyStoreSubdomain() != null
