@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `LICENSE-COMMERCIAL.md` — draft terms for the commercial license the Noncommercial license
+  points at. Tiers, term, scope and the redistribution/OEM case are written down; prices, support
+  commitment and governing law are marked TBD and it has not had legal review.
+- `docs/SELLING_THIS_LIBRARY.md` — the LemonSqueezy and Keygen dashboard setup needed to make the
+  commercial license purchasable, and why the library deliberately does not gate itself.
+
+### Removed
+- The `Copyright Notice:` example block under *Notices* in `LICENSE`. The `Copyright Notice:` line
+  at the top of the file is the one that governs; the example restated it and was a place for a
+  stale address to hide.
+
 ### Changed
 - **License: PolyForm Free Trial 1.0.0 to PolyForm Noncommercial 1.0.0.** Free Trial grants only
   32 days, and only for demonstration, testing and evaluation. That is the wrong basis for a

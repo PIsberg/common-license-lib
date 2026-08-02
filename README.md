@@ -78,6 +78,10 @@ instances against different Keygen accounts in the same JVM.
 
 For a detailed walkthrough on setting up your accounts, finding your API keys, and the customer license acquisition flow, see the **[License Gating Guide](docs/LICENSE_GUIDE.md)**.
 
+If you want to sell a commercial license for your own library the same way, the setup is written
+down in **[Selling this library](docs/SELLING_THIS_LIBRARY.md)** — it documents the flow used for
+this project's own [commercial license](LICENSE-COMMERCIAL.md).
+
 ### Extend the free-provider allow-list
 
 ```java
@@ -138,8 +142,10 @@ from timing attacks.
 [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/).
 
 Free for any noncommercial purpose, including hobby projects, personal study, and use by
-charitable, educational, public research, and government organisations. Commercial use
-requires a separate license — contact isberg.peter+cll@gmail.com.
+charitable, educational, public research, and government organisations.
+
+Commercial use requires a separate license — see
+[LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md), or contact isberg.peter+cll@gmail.com.
 
 > **Note:** this covers the *library itself*. What you gate with it in *your* app is a
 > separate question — the library just provides the mechanism.
