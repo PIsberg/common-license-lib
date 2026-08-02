@@ -14,6 +14,10 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 
+import se.deversity.vibetags.annotations.AIAudit;
+import se.deversity.vibetags.annotations.AIContext;
+import se.deversity.vibetags.annotations.AISecure;
+
 /**
  * Thin online validator against Keygen's
  * <a href="https://keygen.sh/docs/api/licenses/#licenses-actions-validate-key">validate-key</a>
@@ -26,6 +30,13 @@ import java.util.Objects;
  * {@link LicenseResult.Denied} with {@link DeniedReason#NETWORK_ERROR}. Consumers
  * that want fail-open must opt in at the {@code LicenseGate} level.
  */
+@AISecure(aspect = "license validation")
+@AIAudit(checkFor = {"Authentication Bypass", "Credential leakage in exception messages"})
+@AIContext(
+    focus = "Fail closed. Every transport or authorization failure maps to Denied(NETWORK_ERROR); "
+        + "only meta.valid=true produces Allowed. Fail-open is the caller's decision, not this class's.",
+    avoids = "Jackson, Gson, org.json, OkHttp, Apache HttpClient — the library ships zero runtime dependencies"
+)
 public final class KeygenValidator {
 
     private final HttpClient http;

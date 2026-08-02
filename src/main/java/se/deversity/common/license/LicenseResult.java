@@ -1,5 +1,7 @@
 package se.deversity.common.license;
 
+import se.deversity.vibetags.annotations.AIPublicAPI;
+
 /**
  * Outcome of {@code LicenseGate.check(email, licenseKey)}.
  *
@@ -7,6 +9,8 @@ package se.deversity.common.license;
  * {@link Denied} (block or upsell). Consumers are expected to use an exhaustive
  * {@code switch} pattern.
  */
+@AIPublicAPI(reason = "Consumers switch exhaustively over this sealed hierarchy. Adding a permitted "
+    + "subtype, removing an enum constant, or renaming one is a source-breaking change for every caller.")
 public sealed interface LicenseResult {
 
     /**

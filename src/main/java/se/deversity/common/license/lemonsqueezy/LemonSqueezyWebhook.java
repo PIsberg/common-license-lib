@@ -8,6 +8,11 @@ import java.security.NoSuchAlgorithmException;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import se.deversity.vibetags.annotations.AIAudit;
+import se.deversity.vibetags.annotations.AIContext;
+import se.deversity.vibetags.annotations.AIPublicAPI;
+import se.deversity.vibetags.annotations.AISecure;
+
 /**
  * Utilities for verifying inbound webhook requests from LemonSqueezy.
  *
@@ -18,6 +23,13 @@ import javax.crypto.spec.SecretKeySpec;
  *
  * <p>All comparisons are constant-time via {@link MessageDigest#isEqual(byte[], byte[])}.
  */
+@AISecure(aspect = "webhook signature verification")
+@AIAudit(checkFor = {"Timing attack", "Authentication Bypass"})
+@AIPublicAPI(reason = "Called directly from consumer webhook handlers; a signature change breaks every caller.")
+@AIContext(
+    focus = "Constant-time comparison. Digest equality goes through MessageDigest.isEqual and nothing else.",
+    avoids = "String#equals, Arrays#equals, Objects#equals on digests; early-return on first mismatching byte"
+)
 public final class LemonSqueezyWebhook {
 
     private static final String ALG = "HmacSHA256";
