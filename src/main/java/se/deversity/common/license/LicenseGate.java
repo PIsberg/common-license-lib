@@ -47,6 +47,7 @@ public final class LicenseGate {
             http,
             config.keygenAccountId(),
             config.keygenApiKey(),
+            config.keygenProductId(),
             config.keygenBaseUri(),
             config.keygenTimeout());
         this.checkout = config.lemonSqueezyStoreSubdomain() != null

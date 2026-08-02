@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   managed region of `CLAUDE.md` and per-class rule files under `.claude/rules/`.
 - `docs/build-and-test.md`, `docs/invariants.md`, `docs/common-tasks.md` and
   `docs/releasing.md`, so `CLAUDE.md` links to detail instead of restating it.
+- `KeygenValidator` constructor overload taking a `productId`. The 5-argument constructor is
+  retained and delegates with `productId = null`, so this is source- and binary-compatible.
 
 ### Changed
 - JUnit 5.11.3 / 6.1.1 to 6.1.2 across the library, the consumer fixture and the examples.
@@ -30,11 +32,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   loopback `HttpServer` via `keygenBaseUri`. Neither of those two config options has any test
   coverage, which is now stated rather than implied.
 - README install snippets pinned 0.1.0 while the project was at 0.2.1.
+- `LicenseConfig.Builder#keygenProductId(...)` was accepted, stored and exposed via a getter, but
+  never reached `KeygenValidator` — so validation was never scoped to a product and the README's
+  "scope checks to this product" was false. A key issued for a different product of the same
+  Keygen account validated successfully. It is now sent as `meta.scope.product`, covered by a
+  wire-level test at both the validator and the `LicenseGate` level.
 
 ### Removed
 - `.claude/common-license-lib.md`. It duplicated `CLAUDE.md`, was never loaded into context by
   any tool, and named the artifact `se.deversity.common:license-lib`, which does not exist. Its
   unique content moved into `docs/invariants.md` and `docs/common-tasks.md`.
+
+## [0.2.1] - 2026-04-19
+
+Reconstructed from git history (tag `v0.2.1`); this release was published to Maven Central
+without a changelog entry.
+
+### Fixed
+- Version conflicts between the library, the consumer fixture and `examples/minimal-gate`, which
+  still referenced 0.1.0 after the 0.2.0 bump.
+- Gradle build pinned to Java 21; Java 25 broke the build.
+- `gradlew` was not executable, failing the GitHub Actions run.
+- harden-runner egress policy blocked the Gradle distribution download.
+
+## [0.2.0] - 2026-04-19
+
+Reconstructed from git history (tag `v0.2.0`); this release was published to Maven Central
+without a changelog entry.
+
+### Added
+- Maven Central publication via the Sonatype Central Portal: GPG signing, sources and javadoc
+  jars, CycloneDX SBOM.
+- StepSecurity hardening across the GitHub Actions workflows.
+- `CLAUDE.md` and `docs/architecture.md` with PlantUML diagrams.
 
 ## [0.1.0] - 2026-04-19
 

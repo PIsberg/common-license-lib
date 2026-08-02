@@ -83,6 +83,28 @@ class KeygenValidatorTest {
     }
 
     @Test
+    void scopesToProductWhenProductIdIsConfigured() {
+        responseStatus = 200;
+        responseBody = "{\"meta\":{\"valid\":true,\"code\":\"VALID\"}}";
+
+        new KeygenValidator(http, "acct_x", "api_key_x", "prod_x", baseUri, Duration.ofSeconds(3))
+            .validate("KEY-123", "ada@corp.com");
+
+        assertTrue(lastBody.get().contains("\"product\":\"prod_x\""), lastBody.get());
+        assertTrue(lastBody.get().contains("\"email\":\"ada@corp.com\""), lastBody.get());
+    }
+
+    @Test
+    void omitsProductScopeWhenProductIdIsAbsent() {
+        responseStatus = 200;
+        responseBody = "{\"meta\":{\"valid\":true,\"code\":\"VALID\"}}";
+
+        newValidator().validate("KEY-123", "ada@corp.com");
+
+        assertFalse(lastBody.get().contains("product"), lastBody.get());
+    }
+
+    @Test
     void mapsExpiredCode() {
         responseStatus = 200;
         responseBody = "{\"meta\":{\"valid\":false,\"code\":\"EXPIRED\"}}";
