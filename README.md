@@ -2,7 +2,7 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/se.deversity.common/common-license-lib.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/se.deversity.common/common-license-lib)
 ![Java 21+](https://img.shields.io/badge/Java-21%2B-blue)
-[![License: PolyForm Free Trial 1.0.0](https://img.shields.io/badge/License-PolyForm%20Free%20Trial%201.0.0-blue.svg)](https://polyformproject.org/licenses/free-trial/1.0.0/)
+[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-blue.svg)](https://polyformproject.org/licenses/noncommercial/1.0.0/)
 
 A drop-in **JVM license gate** designed for distributing software under
 [PolyForm Commercial-style](https://polyformproject.org/licenses/) terms.
@@ -135,8 +135,11 @@ from timing attacks.
 
 ## License
 
-[PolyForm Free Trial License 1.0.0](https://polyformproject.org/licenses/free-trial/1.0.0/).
+[PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/).
 
-> **Note:** the *library itself* is published under PolyForm Free Trial for
-> evaluation. Your downstream usage terms (what you gate with it in *your* app)
-> are up to you — the library just provides the mechanism.
+Free for any noncommercial purpose, including hobby projects, personal study, and use by
+charitable, educational, public research, and government organisations. Commercial use
+requires a separate license — contact isberg.peter+cll@gmail.com.
+
+> **Note:** this covers the *library itself*. What you gate with it in *your* app is a
+> separate question — the library just provides the mechanism.
