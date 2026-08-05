@@ -51,6 +51,10 @@ to `.claude/rules/`, which Claude Code loads only when it opens the matching sou
       <vulnerability_check>Authentication Bypass</vulnerability_check>
       <vulnerability_check>Credential leakage in exception messages</vulnerability_check>
     </file>
+    <file path="se.deversity.common.license.lemonsqueezy.LemonSqueezyValidator">
+      <vulnerability_check>Authentication Bypass</vulnerability_check>
+      <vulnerability_check>Credential leakage in exception messages</vulnerability_check>
+    </file>
     <file path="se.deversity.common.license.lemonsqueezy.LemonSqueezyWebhook">
       <vulnerability_check>Timing attack</vulnerability_check>
       <vulnerability_check>Authentication Bypass</vulnerability_check>
@@ -76,6 +80,9 @@ to `.claude/rules/`, which Claude Code loads only when it opens the matching sou
     <element path="se.deversity.common.license.keygen.KeygenValidator">
       <aspect>license validation</aspect>
     </element>
+    <element path="se.deversity.common.license.lemonsqueezy.LemonSqueezyValidator">
+      <aspect>license validation</aspect>
+    </element>
     <element path="se.deversity.common.license.lemonsqueezy.LemonSqueezyWebhook">
       <aspect>webhook signature verification</aspect>
     </element>
@@ -92,6 +99,7 @@ to `.claude/rules/`, which Claude Code loads only when it opens the matching sou
     <element path="se.deversity.common.license.email.FreeProviders" rules=".claude/rules/se-deversity-common-license-email-FreeProviders.md"/>
     <element path="se.deversity.common.license.internal.Json" rules=".claude/rules/se-deversity-common-license-internal-Json.md"/>
     <element path="se.deversity.common.license.keygen.KeygenValidator" rules=".claude/rules/se-deversity-common-license-keygen-KeygenValidator.md"/>
+    <element path="se.deversity.common.license.lemonsqueezy.LemonSqueezyValidator" rules=".claude/rules/se-deversity-common-license-lemonsqueezy-LemonSqueezyValidator.md"/>
     <element path="se.deversity.common.license.lemonsqueezy.LemonSqueezyWebhook" rules=".claude/rules/se-deversity-common-license-lemonsqueezy-LemonSqueezyWebhook.md"/>
   </scoped_rules>
 
