@@ -22,14 +22,14 @@ A drop-in **JVM license gate** designed for distributing software under
 <dependency>
   <groupId>se.deversity.common</groupId>
   <artifactId>common-license-lib</artifactId>
-  <version>0.3.0</version>
+  <version>0.4.0</version>
 </dependency>
 ```
 
 ### Gradle (Kotlin DSL)
 
 ```kotlin
-implementation("se.deversity.common:common-license-lib:0.3.0")
+implementation("se.deversity.common:common-license-lib:0.4.0")
 ```
 
 ## Quick start
