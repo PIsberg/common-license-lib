@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-05
+
+### Added — LemonSqueezy can now validate license keys, not just sell them
+
+Before this release the LemonSqueezy integration could build a checkout URL and verify a webhook
+signature, but `LicenseGate.check` had exactly one validation path: Keygen. A LemonSqueezy key
+handed to the gate was posted to Keygen and denied. Selling on LemonSqueezy therefore required
+standing up a webhook that provisioned a second license in Keygen, as
+`docs/SELLING_THIS_LIBRARY.md` describes.
+
+- `LemonSqueezyValidator` — online validation against
+  [`POST /v1/licenses/validate`](https://docs.lemonsqueezy.com/api/license-api/validate-license-key).
+  Fail-closed like `KeygenValidator`: transport failures, rate limits and 5xx map to
+  `Denied(NETWORK_ERROR)`, never to an accidental pass.
+- `LicenseConfig.Provider` — `KEYGEN` (default) or `LEMONSQUEEZY`. `LicenseGate` builds and
+  consults only the selected provider's validator, and `build()` now validates only that
+  provider's required inputs.
+- `LicenseConfig.Builder.lemonSqueezyStoreId`, `lemonSqueezyProductId`,
+  `lemonSqueezyEmailBinding`, `lemonSqueezyBaseUri` and `lemonSqueezyTimeout`.
+
+**`lemonSqueezyStoreId` is mandatory for the LemonSqueezy provider, and the reason is a security
+property of the endpoint.** `/v1/licenses/validate` carries no account credential — the license
+key is the only input — so it answers for every key issued by every store on the platform. A
+validator that trusted `valid: true` alone would accept a license bought from an unrelated
+vendor. The store id is checked against `meta.store_id` on every success path, and a missing
+`meta` is treated as no evidence and denied. `LemonSqueezyValidatorTest` pins this by asserting a
+foreign `store_id` is rejected despite `valid: true`.
+
+Two behaviours worth knowing, both pinned by tests:
+
+- A never-activated key has status **`inactive`** and is **valid**. This validator never calls
+  `/activate`, so every unused key is legitimately `inactive`; gating on `status == "active"`
+  would reject them all.
+- Email binding defaults to **`EmailBinding.DOMAIN`**, matching on the domain of
+  `meta.customer_email`. Organisations buy once through a billing address and expect every
+  developer on that domain to be covered, so exact-address matching would deny everyone except
+  the person who paid. `EmailBinding.EXACT` remains available for per-seat licensing.
+
+### Compatibility
+
+Source- and binary-compatible for existing consumers. `Provider` defaults to `KEYGEN`, so a
+config that names no provider behaves exactly as it did in 0.3.0, including the requirement for
+`keygenAccountId` and `keygenApiKey`. The `LicenseGate` and `LicenseResult` public surfaces are
+unchanged; the new denial cases reuse existing `DeniedReason` constants.
+
+
 ## [0.3.0] - 2026-08-02
 
 First release under PolyForm Noncommercial. Versions 0.2.0 and 0.2.1 remain published under

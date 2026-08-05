@@ -3,6 +3,7 @@ package se.deversity.common.license;
 import se.deversity.common.license.email.EmailClassification;
 import se.deversity.common.license.keygen.KeygenValidator;
 import se.deversity.common.license.lemonsqueezy.LemonSqueezyCheckout;
+import se.deversity.common.license.lemonsqueezy.LemonSqueezyValidator;
 
 import se.deversity.vibetags.annotations.AIPublicAPI;
 import se.deversity.vibetags.annotations.AIThreadSafe;
@@ -38,18 +39,35 @@ public final class LicenseGate {
     private final LicenseConfig config;
     private final HttpClient http;
     private final KeygenValidator keygen;
+    private final LemonSqueezyValidator lemonSqueezy;
     private final LemonSqueezyCheckout checkout;
 
     private LicenseGate(LicenseConfig config) {
         this.config = config;
         this.http = config.httpClient() != null ? config.httpClient() : HttpClient.newHttpClient();
-        this.keygen = new KeygenValidator(
-            http,
-            config.keygenAccountId(),
-            config.keygenApiKey(),
-            config.keygenProductId(),
-            config.keygenBaseUri(),
-            config.keygenTimeout());
+
+        // Build only the validator the configured provider uses. The unused one's inputs are not
+        // required by LicenseConfig.build(), so constructing it eagerly would throw on a valid config.
+        boolean keygenSelected = config.licenseProvider() == LicenseConfig.Provider.KEYGEN;
+        this.keygen = keygenSelected
+            ? new KeygenValidator(
+                http,
+                config.keygenAccountId(),
+                config.keygenApiKey(),
+                config.keygenProductId(),
+                config.keygenBaseUri(),
+                config.keygenTimeout())
+            : null;
+        this.lemonSqueezy = !keygenSelected && config.lemonSqueezyStoreId() != null
+            ? new LemonSqueezyValidator(
+                http,
+                config.lemonSqueezyBaseUri(),
+                config.lemonSqueezyTimeout(),
+                config.lemonSqueezyStoreId(),
+                config.lemonSqueezyProductId(),
+                config.lemonSqueezyEmailBinding())
+            : null;
+
         this.checkout = config.lemonSqueezyStoreSubdomain() != null
             ? new LemonSqueezyCheckout(config.lemonSqueezyStoreSubdomain())
             : null;
@@ -83,13 +101,26 @@ public final class LicenseGate {
         if (licenseKey == null || licenseKey.isBlank()) {
             return LicenseResult.Denied.of(LicenseResult.DeniedReason.LICENSE_REQUIRED);
         }
-        LicenseResult r = keygen.validate(licenseKey, email);
+        LicenseResult r = validateWithProvider(email, licenseKey);
         if (r instanceof LicenseResult.Denied d
             && d.reason() == LicenseResult.DeniedReason.NETWORK_ERROR
             && config.allowOnNetworkError()) {
             return new LicenseResult.Allowed(LicenseResult.AllowedReason.NETWORK_ERROR_ALLOWED);
         }
         return r;
+    }
+
+    private LicenseResult validateWithProvider(String email, String licenseKey) {
+        if (keygen != null) {
+            return keygen.validate(licenseKey, email);
+        }
+        if (lemonSqueezy != null) {
+            return lemonSqueezy.validate(licenseKey, email);
+        }
+        // Unreachable via build(), which requires each provider's inputs. Fail closed regardless:
+        // a gate that cannot validate must never be a gate that lets everyone through.
+        return new LicenseResult.Denied(LicenseResult.DeniedReason.NETWORK_ERROR,
+            "no license validator configured for provider " + config.licenseProvider());
     }
 
     /**
