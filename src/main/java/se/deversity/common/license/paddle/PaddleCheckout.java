@@ -10,25 +10,42 @@ import java.util.StringJoiner;
 /**
  * Build pre-filled checkout URLs for Paddle Billing's hosted checkout.
  *
- * <p>The URL shape is {@code https://pay.paddle.io/checkout/<hostedCheckoutId>?price_id=...&user_email=...}.
- * The hosted checkout id ({@code hsc_...}) comes from a checkout link created in the Paddle
- * dashboard. See
- * <a href="https://developer.paddle.com/paddlejs/hosted-checkout-url-parameters">Hosted checkout
- * URL query parameters</a>.
+ * <p>The URL shape is {@code https://pay.paddle.io/<hostedCheckoutId>?price_id=...&user_email=...}
+ * ({@code sandbox-pay.paddle.io} in sandbox — verified against a live sandbox checkout, which also
+ * shows {@code price_id} is required when the hosted checkout defines no default prices). The
+ * hosted checkout id ({@code hsc_...}) comes from a checkout link created in the Paddle dashboard.
+ * See <a href="https://developer.paddle.com/paddlejs/hosted-checkout-url-parameters">Hosted
+ * checkout URL query parameters</a>.
  *
  * <p>This class does not hit the Paddle API — it's a pure URL builder, safe to call from any thread.
  */
 public final class PaddleCheckout {
 
-    private static final String BASE = "https://pay.paddle.io/checkout/";
+    /** Production checkout host. */
+    public static final String LIVE_BASE = "https://pay.paddle.io/";
 
+    /** Sandbox checkout host. */
+    public static final String SANDBOX_BASE = "https://sandbox-pay.paddle.io/";
+
+    private final String base;
     private final String hostedCheckoutId;
 
+    /** Production checkout for {@code hostedCheckoutId}; equivalent to {@code PaddleCheckout(LIVE_BASE, id)}. */
+    public PaddleCheckout(String hostedCheckoutId) {
+        this(LIVE_BASE, hostedCheckoutId);
+    }
+
     /**
+     * @param base             {@link #LIVE_BASE} or {@link #SANDBOX_BASE}
      * @param hostedCheckoutId the hosted checkout id from the Paddle dashboard's checkout link,
      *                         always prefixed {@code hsc_}. Must not be {@code null}.
      */
-    public PaddleCheckout(String hostedCheckoutId) {
+    public PaddleCheckout(String base, String hostedCheckoutId) {
+        Objects.requireNonNull(base, "base");
+        if (!base.equals(LIVE_BASE) && !base.equals(SANDBOX_BASE)) {
+            throw new IllegalArgumentException("base must be LIVE_BASE or SANDBOX_BASE: " + base);
+        }
+        this.base = base;
         Objects.requireNonNull(hostedCheckoutId, "hostedCheckoutId");
         if (!hostedCheckoutId.startsWith("hsc_")
             || hostedCheckoutId.contains("/") || hostedCheckoutId.contains("?")
@@ -75,8 +92,8 @@ public final class PaddleCheckout {
                 qs.add(encode(key) + "=" + encode(e.getValue()));
             }
         }
-        String base = BASE + hostedCheckoutId;
-        return URI.create(qs.length() == 0 ? base : base + "?" + qs);
+        String url = base + hostedCheckoutId;
+        return URI.create(qs.length() == 0 ? url : url + "?" + qs);
     }
 
     private static String encode(String s) {

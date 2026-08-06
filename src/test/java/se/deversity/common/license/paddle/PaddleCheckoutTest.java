@@ -14,15 +14,29 @@ class PaddleCheckoutTest {
     @Test
     void buildsBareUrlForDefaultPricesAnonymousCheckout() {
         URI u = checkout.buildCheckoutUrl(null, null);
-        assertEquals(URI.create("https://pay.paddle.io/checkout/hsc_01abc_secret"), u);
+        assertEquals(URI.create("https://pay.paddle.io/hsc_01abc_secret"), u);
     }
 
     @Test
     void selectsPriceAndPrefillsEmailUrlEncoded() {
         URI u = checkout.buildCheckoutUrl("ada@corp.com", "pri_01xyz");
         assertEquals(
-            "https://pay.paddle.io/checkout/hsc_01abc_secret?price_id=pri_01xyz&user_email=ada%40corp.com",
+            "https://pay.paddle.io/hsc_01abc_secret?price_id=pri_01xyz&user_email=ada%40corp.com",
             u.toString());
+    }
+
+    @Test
+    void sandboxBaseBuildsSandboxHost() {
+        PaddleCheckout sbx = new PaddleCheckout(PaddleCheckout.SANDBOX_BASE, "hsc_01abc_secret");
+        URI u = sbx.buildCheckoutUrl(null, "pri_01xyz");
+        assertEquals("https://sandbox-pay.paddle.io/hsc_01abc_secret?price_id=pri_01xyz",
+            u.toString());
+    }
+
+    @Test
+    void rejectsArbitraryBase() {
+        assertThrows(IllegalArgumentException.class,
+            () -> new PaddleCheckout("https://evil.example/", "hsc_01abc"));
     }
 
     @Test
