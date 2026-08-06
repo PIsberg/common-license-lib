@@ -45,7 +45,7 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.jupiter.version>6.1.2</junit.jupiter.version>
-        <vibetags.version>1.0.0-RC10</vibetags.version>
+        <vibetags.version>1.0.1</vibetags.version>
         <!-- Plugin versions -->
         <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
