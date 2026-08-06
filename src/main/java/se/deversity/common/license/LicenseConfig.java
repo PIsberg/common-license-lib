@@ -269,9 +269,13 @@ public final class LicenseConfig {
                         if (!mockMode) throw new LicenseException("keygenAccountId is required");
                         else keygenAccountId = "mocked";
                     }
-                    if (keygenApiKey == null || keygenApiKey.isBlank()) {
-                        if (!mockMode) throw new LicenseException("keygenApiKey is required");
-                        else keygenApiKey = "mocked";
+                    // keygenApiKey is deliberately optional: validate-key is a public endpoint,
+                    // and end users are never issued a token. Requiring one here forced callers
+                    // to invent a placeholder, which Keygen rejects with 401 before evaluating
+                    // the license — denying every legitimate customer run. Absent means the
+                    // request goes out with no Authorization header.
+                    if (mockMode && (keygenApiKey == null || keygenApiKey.isBlank())) {
+                        keygenApiKey = "mocked";
                     }
                 }
                 case LEMONSQUEEZY -> {
