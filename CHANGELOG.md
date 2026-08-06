@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-06
+
+### Added — Paddle as a second commerce provider, and operator-side Keygen issuance
+
+Paddle Billing has no license engine of its own — no key generation, no validate endpoint — so
+the design is *Paddle sells, Keygen licenses*: a buyer checks out through Paddle, and the seller
+issues a Keygen license server-side for the same email. The existing `KeygenValidator` /
+`Provider.KEYGEN` validation path is unchanged.
+
+- `paddle.PaddleCheckout` — pure URL builder for Paddle's hosted checkout links
+  (`https://pay.paddle.io/<hsc_...>` live, `sandbox-pay.paddle.io` sandbox), with `price_id` /
+  `user_email` prefill. Mirrors `LemonSqueezyCheckout`; rejects `price_id`/`user_email` smuggled
+  through `extraParams`.
+- `paddle.PaddleWebhook` — verifies the `Paddle-Signature: ts=...;h1=...` header: HMAC-SHA256 over
+  `ts:rawBody`, constant-time comparison against every `h1` rotation candidate with no early exit,
+  plus an opt-in replay-window overload (`maxAgeSeconds`, `Clock`). Mirrors `LemonSqueezyWebhook`.
+- `keygen.KeygenIssuer` — operator-side fulfilment: ensure a Keygen user exists for the buyer
+  email (create, falling back to lookup-by-email on a duplicate), create a license under a
+  policy, and return the key. Throws `LicenseException` on failure carrying the HTTP status and
+  Keygen's error title only — never the raw response body or the admin token.
+
+`PaddleCheckout`'s URL shape and `KeygenValidator`'s scope key were both corrected against live
+accounts after this branch first went in:
+
+- **Checkout URLs have no `/checkout/` path segment.** A hosted checkout created in a real Paddle
+  sandbox produces `https://sandbox-pay.paddle.io/<hsc_...>`, not
+  `https://pay.paddle.io/checkout/<hsc_...>` as the docs example implied. `PaddleCheckout` now
+  takes `LIVE_BASE` or `SANDBOX_BASE` (any other base is rejected) and joins the id directly.
+- **Keygen's validate-key scope key is `user`, not `email`.** Keygen rejects `scope.email` with
+  HTTP 400 "unpermitted parameter" — it was never a documented scope, and loopback tests only
+  pinned this library's own wire shape, so the bug was invisible until a real account existed.
+  `KeygenValidator` now sends `scope.user` (Keygen resolves it from an email and enforces it: a
+  wrong email yields `USER_SCOPE_MISMATCH`, a bogus key `NOT_FOUND`).
+- **`KeygenValidator.apiKey` is now nullable.** `validate-key` is a public endpoint, but a
+  made-up bearer token is rejected with 401 before evaluation — so a caller with no real token
+  must send no `Authorization` header at all, not a placeholder value. `null` or blank now omits
+  the header; the tokenless path still enforces the user scope.
+
 ## [0.4.0] - 2026-08-05
 
 ### Added — LemonSqueezy can now validate license keys, not just sell them
