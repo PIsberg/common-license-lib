@@ -79,7 +79,7 @@ class KeygenValidatorTest {
         assertEquals(AllowedReason.LICENSE_VALID, ((LicenseResult.Allowed) r).reason());
         assertEquals("Bearer api_key_x", lastAuth.get());
         assertTrue(lastBody.get().contains("\"key\":\"KEY-123\""), lastBody.get());
-        assertTrue(lastBody.get().contains("\"email\":\"ada@corp.com\""), lastBody.get());
+        assertTrue(lastBody.get().contains("\"user\":\"ada@corp.com\""), lastBody.get());
     }
 
     @Test
@@ -91,7 +91,7 @@ class KeygenValidatorTest {
             .validate("KEY-123", "ada@corp.com");
 
         assertTrue(lastBody.get().contains("\"product\":\"prod_x\""), lastBody.get());
-        assertTrue(lastBody.get().contains("\"email\":\"ada@corp.com\""), lastBody.get());
+        assertTrue(lastBody.get().contains("\"user\":\"ada@corp.com\""), lastBody.get());
     }
 
     @Test
@@ -158,5 +158,19 @@ class KeygenValidatorTest {
         responseBody = "not-json";
         LicenseResult r = newValidator().validate("KEY", "x@corp.com");
         assertEquals(DeniedReason.NETWORK_ERROR, ((LicenseResult.Denied) r).reason());
+    }
+
+    @Test
+    void omitsAuthorizationHeaderWhenApiKeyIsNull() {
+        responseStatus = 200;
+        responseBody = "{\"meta\":{\"valid\":true,\"code\":\"VALID\"}}";
+        KeygenValidator anon = new KeygenValidator(http, "acct_x", null, baseUri,
+            java.time.Duration.ofSeconds(5));
+
+        LicenseResult r = anon.validate("KEY-123", "ada@corp.com");
+
+        assertInstanceOf(LicenseResult.Allowed.class, r);
+        assertNull(lastAuth.get(), "validate-key is public; a made-up bearer would be rejected "
+            + "with 401 before evaluation, so no header may be sent without a real token");
     }
 }

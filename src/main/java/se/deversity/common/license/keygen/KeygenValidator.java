@@ -23,8 +23,11 @@ import se.deversity.vibetags.annotations.AISecure;
  * <a href="https://keygen.sh/docs/api/licenses/#licenses-actions-validate-key">validate-key</a>
  * action.
  *
- * <p>Binds the check to the caller's email via {@code meta.scope.email}, so a license
- * can be issued per-user by the consumer's Keygen account.
+ * <p>Binds the check to the caller's email via {@code meta.scope.user} — Keygen accepts a
+ * user email anywhere a user id is expected — so a license issued to an owner user only
+ * validates for that owner. Verified against the live API 2026-08-06: a wrong email yields
+ * {@code USER_SCOPE_MISMATCH}, and the formerly used {@code scope.email} key is rejected with
+ * HTTP 400 "unpermitted parameter".
  *
  * <p>Does <strong>not</strong> throw on HTTP/network errors — maps everything to a
  * {@link LicenseResult.Denied} with {@link DeniedReason#NETWORK_ERROR}. Consumers
@@ -51,7 +54,7 @@ public final class KeygenValidator {
      *
      * @param http       shared HTTP client (the caller owns lifecycle)
      * @param accountId  Keygen account UUID or slug
-     * @param apiKey     admin or product token (passed as a Bearer token)
+     * @param apiKey     admin or product token (passed as a Bearer token), or {@code null} to call the public validate-key endpoint unauthenticated
      * @param baseUri    typically {@code https://api.keygen.sh}
      * @param timeout    per-request timeout
      */
@@ -62,7 +65,7 @@ public final class KeygenValidator {
     /**
      * @param http       shared HTTP client (the caller owns lifecycle)
      * @param accountId  Keygen account UUID or slug
-     * @param apiKey     admin or product token (passed as a Bearer token)
+     * @param apiKey     admin or product token (passed as a Bearer token), or {@code null} to call the public validate-key endpoint unauthenticated
      * @param productId  Keygen product UUID or slug; when non-null the validation is scoped to it
      *                   via {@code meta.scope.product}, so a key issued for another product of the
      *                   same account is rejected. May be {@code null}.
@@ -73,7 +76,7 @@ public final class KeygenValidator {
                            URI baseUri, Duration timeout) {
         this.http = Objects.requireNonNull(http, "http");
         this.accountId = Objects.requireNonNull(accountId, "accountId");
-        this.apiKey = Objects.requireNonNull(apiKey, "apiKey");
+        this.apiKey = apiKey == null || apiKey.isBlank() ? null : apiKey;
         this.productId = productId;
         this.baseUri = Objects.requireNonNull(baseUri, "baseUri");
         this.timeout = Objects.requireNonNull(timeout, "timeout");
@@ -90,18 +93,22 @@ public final class KeygenValidator {
             : ",\"product\":\"" + Json.escape(productId) + "\"";
 
         String body = "{\"meta\":{\"key\":\"" + Json.escape(licenseKey) + "\""
-            + ",\"scope\":{\"email\":\"" + Json.escape(email) + "\"" + productScope + "}}}";
+            + ",\"scope\":{\"user\":\"" + Json.escape(email) + "\"" + productScope + "}}}";
 
         URI uri = baseUri.resolve("/v1/accounts/" + accountId
             + "/licenses/actions/validate-key");
 
-        HttpRequest request = HttpRequest.newBuilder(uri)
+        HttpRequest.Builder rb = HttpRequest.newBuilder(uri)
             .timeout(timeout)
-            .header("Authorization", "Bearer " + apiKey)
             .header("Accept", "application/vnd.api+json")
             .header("Content-Type", "application/vnd.api+json")
-            .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
-            .build();
+            .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8));
+        if (apiKey != null) {
+            // validate-key is public; a made-up bearer is rejected with 401 before evaluation,
+            // so an absent token must mean an absent header, not a placeholder.
+            rb.header("Authorization", "Bearer " + apiKey);
+        }
+        HttpRequest request = rb.build();
 
         HttpResponse<String> resp;
         try {
