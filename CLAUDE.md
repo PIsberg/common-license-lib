@@ -47,6 +47,10 @@ to `.claude/rules/`, which Claude Code loads only when it opens the matching sou
 <project_guardrails>
 
   <audit_requirements>
+    <file path="se.deversity.common.license.keygen.KeygenIssuer">
+      <vulnerability_check>Credential leakage in exception messages</vulnerability_check>
+      <vulnerability_check>Server-side request forgery via caller-supplied ids</vulnerability_check>
+    </file>
     <file path="se.deversity.common.license.keygen.KeygenValidator">
       <vulnerability_check>Authentication Bypass</vulnerability_check>
       <vulnerability_check>Credential leakage in exception messages</vulnerability_check>
@@ -58,6 +62,11 @@ to `.claude/rules/`, which Claude Code loads only when it opens the matching sou
     <file path="se.deversity.common.license.lemonsqueezy.LemonSqueezyWebhook">
       <vulnerability_check>Timing attack</vulnerability_check>
       <vulnerability_check>Authentication Bypass</vulnerability_check>
+    </file>
+    <file path="se.deversity.common.license.paddle.PaddleWebhook">
+      <vulnerability_check>Timing attack</vulnerability_check>
+      <vulnerability_check>Authentication Bypass</vulnerability_check>
+      <vulnerability_check>Replay attack</vulnerability_check>
     </file>
   </audit_requirements>
 
@@ -77,6 +86,9 @@ to `.claude/rules/`, which Claude Code loads only when it opens the matching sou
   Never include runtime values of elements listed in <pii_guardrails> in logs, console output, external API calls, test fixtures, mock data, or code suggestions. Treat their values as strictly confidential.
 </rule>
   <security_elements>
+    <element path="se.deversity.common.license.keygen.KeygenIssuer">
+      <aspect>license issuance (admin-token API access)</aspect>
+    </element>
     <element path="se.deversity.common.license.keygen.KeygenValidator">
       <aspect>license validation</aspect>
     </element>
@@ -84,6 +96,9 @@ to `.claude/rules/`, which Claude Code loads only when it opens the matching sou
       <aspect>license validation</aspect>
     </element>
     <element path="se.deversity.common.license.lemonsqueezy.LemonSqueezyWebhook">
+      <aspect>webhook signature verification</aspect>
+    </element>
+    <element path="se.deversity.common.license.paddle.PaddleWebhook">
       <aspect>webhook signature verification</aspect>
     </element>
   </security_elements>
@@ -98,9 +113,11 @@ to `.claude/rules/`, which Claude Code loads only when it opens the matching sou
     <element path="se.deversity.common.license.email.EmailClassifier" rules=".claude/rules/se-deversity-common-license-email-EmailClassifier.md"/>
     <element path="se.deversity.common.license.email.FreeProviders" rules=".claude/rules/se-deversity-common-license-email-FreeProviders.md"/>
     <element path="se.deversity.common.license.internal.Json" rules=".claude/rules/se-deversity-common-license-internal-Json.md"/>
+    <element path="se.deversity.common.license.keygen.KeygenIssuer" rules=".claude/rules/se-deversity-common-license-keygen-KeygenIssuer.md"/>
     <element path="se.deversity.common.license.keygen.KeygenValidator" rules=".claude/rules/se-deversity-common-license-keygen-KeygenValidator.md"/>
     <element path="se.deversity.common.license.lemonsqueezy.LemonSqueezyValidator" rules=".claude/rules/se-deversity-common-license-lemonsqueezy-LemonSqueezyValidator.md"/>
     <element path="se.deversity.common.license.lemonsqueezy.LemonSqueezyWebhook" rules=".claude/rules/se-deversity-common-license-lemonsqueezy-LemonSqueezyWebhook.md"/>
+    <element path="se.deversity.common.license.paddle.PaddleWebhook" rules=".claude/rules/se-deversity-common-license-paddle-PaddleWebhook.md"/>
   </scoped_rules>
 
 <rule>When you work on any element listed in <scoped_rules>, open its referenced rule file and apply the guardrails there. The rule files are the authoritative source for those elements.</rule>

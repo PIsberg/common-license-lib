@@ -14,6 +14,11 @@ indexed from the block below.
 ## 🛡️ MANDATORY SECURITY AUDITS
 When proposing edits or writing code for the following files, you MUST perform a security review before outputting the final code. You must explicitly state in your response that you have audited the changes for the required vulnerabilities.
 
+File: `se.deversity.common.license.keygen.KeygenIssuer`
+Critical Vulnerabilities to Prevent:
+- Credential leakage in exception messages
+- Server-side request forgery via caller-supplied ids
+
 File: `se.deversity.common.license.keygen.KeygenValidator`
 Critical Vulnerabilities to Prevent:
 - Authentication Bypass
@@ -29,6 +34,12 @@ Critical Vulnerabilities to Prevent:
 - Timing attack
 - Authentication Bypass
 
+File: `se.deversity.common.license.paddle.PaddleWebhook`
+Critical Vulnerabilities to Prevent:
+- Timing attack
+- Authentication Bypass
+- Replay attack
+
 
 ## 🔒 PII / PRIVACY GUARDRAILS
 The following elements handle Personally Identifiable Information (PII).
@@ -41,9 +52,11 @@ test fixtures, mock data, or code suggestions.
 ## 🔐 SECURITY-CRITICAL CODE
 The following elements are security-critical. AI must not weaken security properties. Any change must be reviewed for security impact.
 
+- `se.deversity.common.license.keygen.KeygenIssuer`: Security-critical code [license issuance (admin-token API access)]. Do not weaken security properties. Flag any change for security review.
 - `se.deversity.common.license.keygen.KeygenValidator`: Security-critical code [license validation]. Do not weaken security properties. Flag any change for security review.
 - `se.deversity.common.license.lemonsqueezy.LemonSqueezyValidator`: Security-critical code [license validation]. Do not weaken security properties. Flag any change for security review.
 - `se.deversity.common.license.lemonsqueezy.LemonSqueezyWebhook`: Security-critical code [webhook signature verification]. Do not weaken security properties. Flag any change for security review.
+- `se.deversity.common.license.paddle.PaddleWebhook`: Security-critical code [webhook signature verification]. Do not weaken security properties. Flag any change for security review.
 
 ## Scoped Rules Index
 Detailed per-element guardrails live in scoped rule files that load automatically when you open the matching source file. Consult the referenced file before modifying an element:
@@ -55,7 +68,9 @@ Detailed per-element guardrails live in scoped rule files that load automaticall
 - `se.deversity.common.license.email.EmailClassifier` → `.gemini/rules/se-deversity-common-license-email-EmailClassifier.md`
 - `se.deversity.common.license.email.FreeProviders` → `.gemini/rules/se-deversity-common-license-email-FreeProviders.md`
 - `se.deversity.common.license.internal.Json` → `.gemini/rules/se-deversity-common-license-internal-Json.md`
+- `se.deversity.common.license.keygen.KeygenIssuer` → `.gemini/rules/se-deversity-common-license-keygen-KeygenIssuer.md`
 - `se.deversity.common.license.keygen.KeygenValidator` → `.gemini/rules/se-deversity-common-license-keygen-KeygenValidator.md`
 - `se.deversity.common.license.lemonsqueezy.LemonSqueezyValidator` → `.gemini/rules/se-deversity-common-license-lemonsqueezy-LemonSqueezyValidator.md`
 - `se.deversity.common.license.lemonsqueezy.LemonSqueezyWebhook` → `.gemini/rules/se-deversity-common-license-lemonsqueezy-LemonSqueezyWebhook.md`
+- `se.deversity.common.license.paddle.PaddleWebhook` → `.gemini/rules/se-deversity-common-license-paddle-PaddleWebhook.md`
 <!-- VIBETAGS-END -->
