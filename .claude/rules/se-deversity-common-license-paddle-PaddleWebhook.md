@@ -17,6 +17,7 @@ When modifying this element, audit for:
 
 ## Public API Surface Protection
 - **Rule**: Exposes public API. Preserve signature, Javadoc, and behavior without breaking backwards or source compatibility.
+- **Reason**: Called directly from consumer webhook handlers; a signature change breaks every caller.
 
 ## Security-Critical Code
 - **Rule**: This code is security-critical. Do not weaken security properties. Every change must be explicitly reviewed for security impact.

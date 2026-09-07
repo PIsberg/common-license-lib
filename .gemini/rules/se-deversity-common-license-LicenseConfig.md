@@ -16,4 +16,5 @@
 
 ## Public API Surface Protection
 - **Rule**: Exposes public API. Preserve signature, Javadoc, and behavior without breaking backwards or source compatibility.
+- **Reason**: Published builder API; consumer code constructs this directly.
 <!-- VIBETAGS-END -->

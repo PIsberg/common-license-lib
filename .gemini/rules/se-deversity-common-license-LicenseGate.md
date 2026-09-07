@@ -7,4 +7,5 @@
 
 ## Public API Surface Protection
 - **Rule**: Exposes public API. Preserve signature, Javadoc, and behavior without breaking backwards or source compatibility.
+- **Reason**: Published to Maven Central; downstream apps bind to check() and checkoutUrl(). Changes must stay additive and backward-compatible.
 <!-- VIBETAGS-END -->
