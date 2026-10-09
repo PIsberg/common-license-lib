@@ -105,8 +105,9 @@ The recommended pattern is to instantiate one `LicenseGate` at application start
 | `AllowListEmailClassifierTest` | Exercises domain normalisation, IDN, and list overrides in isolation |
 | `consumer-fixture/` (separate Maven project) | Smoke-tests the library from the outside as a consumer dependency would see it |
 
-`LicenseConfig.mockMode(true)` and the injectable `httpClient(...)` are consumer-facing features
-that no test exercises. Nothing currently fails if either regresses.
+`LicenseConfig.mockMode(true)` is covered by `LicenseConfigTest` (builder placeholders, `toString`)
+and `LicenseGateLemonSqueezyTest` (the gate short-circuit). The injectable `httpClient(...)` is a
+consumer-facing feature that no test exercises; nothing fails if it regresses.
 
 Commands and the CI matrix are in [build-and-test.md](build-and-test.md).
 

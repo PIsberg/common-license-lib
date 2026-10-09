@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`LicenseConfig.Builder` no longer writes mock placeholders back into itself.** `build()` with
+  `mockMode(true)` stored `"mocked"` in the builder's `keygenAccountId` and `keygenApiKey`, so a
+  later `mockMode(false).build()` on the same builder passed the required-field check and sent
+  real validations to a non-existent account with a bogus bearer token (which Keygen answers with
+  401, denying every customer). The placeholders now live only in the built config.
+- **Non-positive timeouts are rejected when configured.** `keygenTimeout(...)` and
+  `lemonSqueezyTimeout(...)` accepted `Duration.ZERO` or a negative value, which
+  `HttpRequest.Builder#timeout` then rejected on every `check()` with an
+  `IllegalArgumentException` instead of a result. The setters now throw
+  `IllegalArgumentException` up front.
+- `LicenseConfig.toString()` now includes `mockMode`, the one flag that lets every user through.
+
 ## [0.5.0] - 2026-08-06
 
 ### Added — Paddle as a second commerce provider, and operator-side Keygen issuance

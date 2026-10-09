@@ -64,9 +64,9 @@ No test reaches the public internet.
 The loopback server serves canned Keygen response bodies, so the tests exercise the real
 `HttpClient` code path including timeouts and status mapping.
 
-Two knobs on `LicenseConfig` exist for consumers but are **not covered by any test**:
-`mockMode(true)` and the injectable `httpClient(...)`. Nothing currently fails if either
-regresses. Worth a test before either is relied on.
+One knob on `LicenseConfig` exists for consumers but is **not covered by any test**: the
+injectable `httpClient(...)`. Nothing currently fails if it regresses. Worth a test before it is
+relied on. (`mockMode(true)` is covered by `LicenseConfigTest` and `LicenseGateLemonSqueezyTest`.)
 
 ## VibeTags in the build
 

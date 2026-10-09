@@ -68,11 +68,11 @@ public final class LicenseConfig {
     private final boolean allowOnNetworkError;
     private final boolean mockMode;
 
-    private LicenseConfig(Builder b) {
+    private LicenseConfig(Builder b, String keygenAccountId, String keygenApiKey) {
         this.licenseProvider = b.licenseProvider;
 
-        this.keygenAccountId = b.keygenAccountId;
-        this.keygenApiKey = b.keygenApiKey;
+        this.keygenAccountId = keygenAccountId;
+        this.keygenApiKey = keygenApiKey;
         this.keygenProductId = b.keygenProductId;
         this.keygenBaseUri = b.keygenBaseUri;
         this.keygenTimeout = b.keygenTimeout;
@@ -130,6 +130,7 @@ public final class LicenseConfig {
             + ", lemonSqueezyProductId=" + lemonSqueezyProductId
             + ", lemonSqueezyBaseUri=" + lemonSqueezyBaseUri
             + ", allowOnNetworkError=" + allowOnNetworkError
+            + ", mockMode=" + mockMode
             + '}';
     }
 
@@ -175,7 +176,7 @@ public final class LicenseConfig {
         public Builder keygenApiKey(String v)       { this.keygenApiKey = v; return this; }
         public Builder keygenProductId(String v)    { this.keygenProductId = v; return this; }
         public Builder keygenBaseUri(URI v)         { this.keygenBaseUri = Objects.requireNonNull(v); return this; }
-        public Builder keygenTimeout(Duration v)    { this.keygenTimeout = Objects.requireNonNull(v); return this; }
+        public Builder keygenTimeout(Duration v)    { this.keygenTimeout = requirePositive(v, "keygenTimeout"); return this; }
 
         public Builder lemonSqueezyStoreSubdomain(String v) { this.lemonSqueezyStoreSubdomain = v; return this; }
         public Builder lemonSqueezySigningSecret(String v)  { this.lemonSqueezySigningSecret = v; return this; }
@@ -212,8 +213,17 @@ public final class LicenseConfig {
 
         /** Per-request timeout for the LemonSqueezy validate call. */
         public Builder lemonSqueezyTimeout(Duration v) {
-            this.lemonSqueezyTimeout = Objects.requireNonNull(v);
+            this.lemonSqueezyTimeout = requirePositive(v, "lemonSqueezyTimeout");
             return this;
+        }
+
+        /** {@code HttpRequest.Builder#timeout} rejects zero and negative durations on every request. */
+        private static Duration requirePositive(Duration v, String name) {
+            Objects.requireNonNull(v, name);
+            if (v.isZero() || v.isNegative()) {
+                throw new IllegalArgumentException(name + " must be positive: " + v);
+            }
+            return v;
         }
 
         /** Domains to treat as free providers in addition to the bundled list. */
@@ -241,7 +251,7 @@ public final class LicenseConfig {
         }
 
         /**
-         * When {@code true}, a Keygen network error yields
+         * When {@code true}, a network error from the selected provider yields
          * {@link LicenseResult.Allowed} (reason {@code NETWORK_ERROR_ALLOWED}) instead of
          * {@link LicenseResult.Denied}. Default {@code false} (fail-closed).
          */
@@ -261,21 +271,26 @@ public final class LicenseConfig {
         /**
          * Validates the inputs the selected provider actually needs. Mock mode relaxes both
          * branches, since no request is ever made.
+         *
+         * <p>Mock placeholders go into the built config only, never back into this builder, so a
+         * builder reused for a real build after a mock one is validated from scratch.
          */
         public LicenseConfig build() {
+            String accountId = keygenAccountId;
+            String apiKey = keygenApiKey;
             switch (licenseProvider) {
                 case KEYGEN -> {
-                    if (keygenAccountId == null || keygenAccountId.isBlank()) {
+                    if (accountId == null || accountId.isBlank()) {
                         if (!mockMode) throw new LicenseException("keygenAccountId is required");
-                        else keygenAccountId = "mocked";
+                        else accountId = "mocked";
                     }
                     // keygenApiKey is deliberately optional: validate-key is a public endpoint,
                     // and end users are never issued a token. Requiring one here forced callers
                     // to invent a placeholder, which Keygen rejects with 401 before evaluating
                     // the license — denying every legitimate customer run. Absent means the
                     // request goes out with no Authorization header.
-                    if (mockMode && (keygenApiKey == null || keygenApiKey.isBlank())) {
-                        keygenApiKey = "mocked";
+                    if (mockMode && (apiKey == null || apiKey.isBlank())) {
+                        apiKey = "mocked";
                     }
                 }
                 case LEMONSQUEEZY -> {
@@ -288,7 +303,7 @@ public final class LicenseConfig {
                     }
                 }
             }
-            return new LicenseConfig(this);
+            return new LicenseConfig(this, accountId, apiKey);
         }
     }
 }
