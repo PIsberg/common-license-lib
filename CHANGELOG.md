@@ -44,6 +44,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   signature had many accepted spellings. A consumer de-duplicating deliveries by signature could be
   replayed the same event under a "new" signature. Forgery was never possible; the HMAC comparison
   is unchanged.
+- **Checkout identifiers are validated with allow-lists.** `LemonSqueezyCheckout` rejected only
+  `.` and `/` in the store subdomain, so `localhost#` built a URL whose host is `localhost`, not the
+  store (`?`, `@`, `:` and `\` split the authority the same way). The subdomain must now be a DNS
+  label: letters, digits and `-`, at most 63 characters. `PaddleCheckout` now requires `hsc_`
+  followed by at least one letter, digit or `_`; whitespace, `\` and `%` used to construct fine and
+  then fail on every `buildCheckoutUrl` call. A `LicenseConfig` with a malformed
+  `lemonSqueezyStoreSubdomain` now fails at `LicenseGate.of(...)` instead of at `checkoutUrl(...)`.
 - The JSON parser rejects `\u` escapes with a sign or non-ASCII hex digits (`\u-001` used to
   decode to U+FFFF).
 - `LicenseConfig.toString()` now includes `mockMode`, the one flag that lets every user through.
