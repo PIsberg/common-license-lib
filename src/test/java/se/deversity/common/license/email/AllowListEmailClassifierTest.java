@@ -3,6 +3,7 @@ package se.deversity.common.license.email;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.util.Locale;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,6 +48,39 @@ class AllowListEmailClassifierTest {
             null, Set.of("gmail.com"));
         assertEquals(EmailClassification.COMMERCIAL, c.classify("alice@gmail.com"));
         assertEquals(EmailClassification.FREE_PROVIDER, c.classify("bob@outlook.com"));
+    }
+
+    @org.junit.jupiter.api.Test
+    void classificationDoesNotDependOnTheDefaultLocale() {
+        // Under a Turkish default locale, String#toLowerCase() maps 'I' to dotless 'ı', so
+        // "GMAIL.COM" became "gmaıl.com": a free-mail user was told to buy a license, and an
+        // upper-case commercial override silently failed to remove its domain from the free set.
+        Locale saved = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+            assertEquals(EmailClassification.FREE_PROVIDER,
+                new AllowListEmailClassifier(null, null).classify("ALICE@GMAIL.COM"));
+            assertEquals(EmailClassification.COMMERCIAL,
+                new AllowListEmailClassifier(null, Set.of("GMAIL.COM")).classify("alice@gmail.com"));
+            assertEquals(EmailClassification.FREE_PROVIDER,
+                new AllowListEmailClassifier(Set.of("MAIL.INTRANET.EXAMPLE"), null)
+                    .classify("bob@mail.intranet.example"));
+        } finally {
+            Locale.setDefault(saved);
+        }
+    }
+
+    @org.junit.jupiter.api.Test
+    void unicodeOverridesAreNormalisedLikeAddresses() {
+        // Addresses are punycoded before lookup, so an override spelled in Unicode never matched.
+        AllowListEmailClassifier free = new AllowListEmailClassifier(Set.of("bücher.example"), null);
+        assertEquals(EmailClassification.FREE_PROVIDER, free.classify("anna@bücher.example"));
+
+        // The precedence rule (commercial beats free) must hold across spellings: a punycode free
+        // entry and a Unicode commercial override name the same domain.
+        AllowListEmailClassifier both = new AllowListEmailClassifier(
+            Set.of("xn--bcher-kva.example"), Set.of("bücher.example"));
+        assertEquals(EmailClassification.COMMERCIAL, both.classify("anna@bücher.example"));
     }
 
     @org.junit.jupiter.api.Test

@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import se.deversity.vibetags.annotations.AIKeepInSync;
@@ -50,7 +51,7 @@ public final class FreeProviders {
                     if (s.isEmpty() || s.startsWith("#")) {
                         continue;
                     }
-                    out.add(s.toLowerCase());
+                    out.add(s.toLowerCase(Locale.ROOT));
                 }
             }
         } catch (IOException e) {

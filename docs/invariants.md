@@ -63,8 +63,11 @@ Declared as `@AIThreadSafe(IMMUTABLE)` on `LicenseGate` and `@AIImmutable` on `L
 subtracts `additionalCommercialProviders`. Commercial always wins. Swap the order and a domain
 named in both lists silently becomes free, which is the failure that costs money.
 
-Domains are normalized to lowercase and punycoded with `IDN.toASCII` so international domains
-compare correctly.
+Domains are lowercased with `Locale.ROOT` and punycoded with `IDN.toASCII` so international
+domains compare correctly. Addresses and both override sets go through the same normalization:
+if they did not, a Unicode commercial override would fail to remove a punycode free entry for the
+same domain, and precedence would silently invert. Never call `toLowerCase()` without a locale:
+under a Turkish default locale `"GMAIL.COM"` becomes `"gmaıl.com"`.
 
 ## No global state
 

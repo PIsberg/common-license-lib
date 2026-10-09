@@ -28,7 +28,7 @@ There are no singletons, no DI framework, no reflection, and no third-party runt
 
 **`LicenseConfig` is an immutable value object** built via a fluent builder. It holds all credentials, timeout, and behavioural flags (`allowOnNetworkError`, `mockMode`). `toString()` redacts secret fields. The builder validates that Keygen credentials are present unless `mockMode` is set.
 
-**`EmailClassifier` is a `@FunctionalInterface`** so consumers can replace the entire classification logic with a lambda. The default implementation (`AllowListEmailClassifier`) unions the bundled free-provider list with `additionalFreeProviders` and then subtracts `additionalCommercialProviders` (commercial overrides always win). Domain normalisation uses lowercase + IDN punycode so international domains work correctly.
+**`EmailClassifier` is a `@FunctionalInterface`** so consumers can replace the entire classification logic with a lambda. The default implementation (`AllowListEmailClassifier`) unions the bundled free-provider list with `additionalFreeProviders` and then subtracts `additionalCommercialProviders` (commercial overrides always win). Domain normalisation (`Locale.ROOT` lowercase + IDN punycode) applies to addresses and to both override sets, so international domains work correctly whichever spelling a consumer uses.
 
 **`LemonSqueezyCheckout` and `LemonSqueezyWebhook`** are standalone stateless helpers. Neither requires a `LicenseGate` instance — a consumer server verifying webhooks does not need Keygen credentials in scope.
 

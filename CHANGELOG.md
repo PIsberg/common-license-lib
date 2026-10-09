@@ -19,6 +19,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `HttpRequest.Builder#timeout` then rejected on every `check()` with an
   `IllegalArgumentException` instead of a result. The setters now throw
   `IllegalArgumentException` up front.
+- **Email classification no longer depends on the JVM's default locale.** Domains were lowercased
+  with `String#toLowerCase()`, which under a Turkish default locale turns `GMAIL.COM` into
+  `gmaıl.com`: free-mail users were told to buy a license, and an upper-case
+  `additionalCommercialProviders` entry failed to remove its domain from the free set. All
+  lowercasing now uses `Locale.ROOT`.
+- **`additionalFreeProviders` / `additionalCommercialProviders` are IDN-normalized like addresses.**
+  Addresses were punycoded before lookup but overrides were not, so `bücher.example` as an override
+  never matched, and a Unicode commercial override could not remove the punycode free entry for the
+  same domain, inverting the documented "commercial wins" precedence.
 - `LicenseConfig.toString()` now includes `mockMode`, the one flag that lets every user through.
 
 ## [0.5.0] - 2026-08-06

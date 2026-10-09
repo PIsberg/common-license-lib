@@ -3,6 +3,7 @@ package se.deversity.common.license.email;
 import java.net.IDN;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
@@ -14,8 +15,10 @@ import se.deversity.vibetags.annotations.AIContext;
  * unioned with {@code additionalFreeProviders} and with {@code additionalCommercialProviders}
  * subtracted (the commercial overrides always take precedence).
  *
- * <p>Normalization: lowercase, trim, strip a {@code +tag} from the local part (although
- * classification is domain-only), punycode IDN domains via {@link IDN#toASCII(String)}.
+ * <p>Normalization: trim, lowercase with {@link Locale#ROOT} (never the default locale), punycode
+ * IDN domains via {@link IDN#toASCII(String)}. Classification is domain-only, so the local part
+ * (including any {@code +tag}) is ignored. The {@code additional*} overrides are normalized the
+ * same way, so {@code bücher.example} and {@code xn--bcher-kva.example} name the same domain.
  */
 @AIContext(
     focus = "Precedence is load-bearing: additionalCommercialProviders is subtracted after "
@@ -33,14 +36,14 @@ public final class AllowListEmailClassifier implements EmailClassifier {
         if (additionalFreeProviders != null) {
             for (String d : additionalFreeProviders) {
                 if (d != null && !d.isBlank()) {
-                    effective.add(d.trim().toLowerCase());
+                    effective.add(normalizeOverride(d));
                 }
             }
         }
         if (additionalCommercialProviders != null) {
             for (String d : additionalCommercialProviders) {
                 if (d != null && !d.isBlank()) {
-                    effective.remove(d.trim().toLowerCase());
+                    effective.remove(normalizeOverride(d));
                 }
             }
         }
@@ -76,15 +79,35 @@ public final class AllowListEmailClassifier implements EmailClassifier {
         if (at <= 0 || at == trimmed.length() - 1) {
             return null;
         }
-        String domain = trimmed.substring(at + 1).toLowerCase();
+        String domain = trimmed.substring(at + 1);
         if (domain.contains("@") || domain.contains(" ")) {
             return null;
         }
+        return normalizeDomain(domain);
+    }
+
+    /**
+     * Lowercases with {@link Locale#ROOT} and punycodes. The default locale must not take part:
+     * under Turkish rules {@code "GMAIL.COM".toLowerCase()} is {@code "gmaıl.com"}.
+     *
+     * @return the normalized domain, or {@code null} if {@link IDN#toASCII(String)} rejects it
+     */
+    static String normalizeDomain(String domain) {
         try {
-            return IDN.toASCII(domain);
+            return IDN.toASCII(domain.trim().toLowerCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
             return null;
         }
+    }
+
+    /**
+     * Overrides go through the same normalization as addresses, so a domain spelled in Unicode
+     * matches the punycoded form an address is looked up by. One that IDN rejects is kept as
+     * given (lowercased) rather than dropped, which was the behaviour before normalization.
+     */
+    private static String normalizeOverride(String domain) {
+        String n = normalizeDomain(domain);
+        return n != null ? n : domain.trim().toLowerCase(Locale.ROOT);
     }
 
     @Override
