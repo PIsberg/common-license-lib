@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Build and CI dependencies bumped to the latest stable releases: VibeTags processor 1.4.0
+  (Maven was on 1.3.8, Gradle had drifted to 1.3.2 and generated different guardrail files),
+  JUnit 6.1.3 in the Gradle build and the downstream modules, Gradle wrapper 9.8.1,
+  `maven-compiler-plugin` 3.16.0 / `maven-surefire-plugin` 3.6.0 in the downstream modules,
+  `actions/upload-artifact` 7.0.2, `github/codeql-action` 4.38.3, `step-security/harden-runner`
+  2.22.1. No runtime dependency exists, so nothing changes for consumers of the jar.
+- Dependabot now also watches the Gradle build and the two downstream Maven modules.
+
 ### Fixed
 
 - **`LicenseConfig.Builder` no longer writes mock placeholders back into itself.** `build()` with

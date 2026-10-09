@@ -9,8 +9,9 @@ consumers see the project.
 | Thing | Version |
 | :--- | :--- |
 | Language level | Java 21 (`source`/`target` 21) |
-| Gradle wrapper | 9.6.1 |
-| JUnit | 6.1.2 |
+| Gradle wrapper | 9.8.1 |
+| JUnit | 6.1.3 |
+| VibeTags processor | 1.4.0 (same in `pom.xml` and `build.gradle.kts`) |
 | CI test matrix (Maven) | Java 21 and Java 25 |
 | CI test matrix (Gradle) | Java 21 |
 
