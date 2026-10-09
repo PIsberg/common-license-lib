@@ -73,6 +73,18 @@ class PaddleWebhookTest {
     }
 
     @Test
+    void rejectsTheRightDigestSpelledInNonAsciiDigits() {
+        // Character.digit accepts fullwidth and other Unicode digits, so one h1 had many accepted
+        // spellings, which defeats a replay guard that de-duplicates by signature.
+        StringBuilder fullwidth = new StringBuilder();
+        for (char c : REF_SIG.toCharArray()) {
+            fullwidth.append((char) (c <= '9' ? 0xFF10 + (c - '0') : 0xFF41 + (c - 'a')));
+        }
+        assertFalse(PaddleWebhook.verifySignature(body(), "ts=" + REF_TS + ";h1=" + fullwidth,
+            REF_SECRET));
+    }
+
+    @Test
     void rejectsNullInputs() {
         assertFalse(PaddleWebhook.verifySignature(null, REF_HEADER, REF_SECRET));
         assertFalse(PaddleWebhook.verifySignature(body(), null, REF_SECRET));

@@ -156,7 +156,11 @@ public final class PaddleWebhook {
         }
     }
 
-    /** Lenient hex decoder. Returns {@code null} on any parse error (bad length, bad char). */
+    /**
+     * Hex decoder, case-insensitive, ASCII digits only. Returns {@code null} on any parse error
+     * (bad length, bad char). {@link Character#digit(char, int)} is deliberately not used: it
+     * also accepts fullwidth and other Unicode digits, which gave one signature many spellings.
+     */
     static byte[] decodeHex(String hex) {
         String s = hex.trim();
         if (s.isEmpty() || (s.length() & 1) == 1) {
@@ -164,13 +168,20 @@ public final class PaddleWebhook {
         }
         byte[] out = new byte[s.length() / 2];
         for (int i = 0; i < out.length; i++) {
-            int hi = Character.digit(s.charAt(i * 2), 16);
-            int lo = Character.digit(s.charAt(i * 2 + 1), 16);
+            int hi = hexDigit(s.charAt(i * 2));
+            int lo = hexDigit(s.charAt(i * 2 + 1));
             if (hi < 0 || lo < 0) {
                 return null;
             }
             out[i] = (byte) ((hi << 4) | lo);
         }
         return out;
+    }
+
+    private static int hexDigit(char c) {
+        if (c >= '0' && c <= '9') return c - '0';
+        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+        return -1;
     }
 }

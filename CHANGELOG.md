@@ -39,6 +39,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`LemonSqueezyValidator` no longer truncates a non-integral `store_id`/`product_id`.** The
   scope check used `Number#longValue()`, so `"store_id": 42.9` matched store 42. Only integer
   literals count as scope evidence now.
+- **Webhook signatures accept ASCII hex only.** `LemonSqueezyWebhook` and `PaddleWebhook` decoded
+  hex with `Character.digit`, which also accepts fullwidth and other Unicode digits, so one valid
+  signature had many accepted spellings. A consumer de-duplicating deliveries by signature could be
+  replayed the same event under a "new" signature. Forgery was never possible; the HMAC comparison
+  is unchanged.
 - The JSON parser rejects `\u` escapes with a sign or non-ASCII hex digits (`\u-001` used to
   decode to U+FFFF).
 - `LicenseConfig.toString()` now includes `mockMode`, the one flag that lets every user through.
