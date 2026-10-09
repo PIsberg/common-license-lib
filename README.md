@@ -61,8 +61,8 @@ switch (r) {
    (gmail, outlook, hotmail, yahoo, icloud, protonmail, gmx, aol, …) → **Allowed**.
 2. Otherwise the email is treated as commercial. If no license key is supplied →
    **Denied(LICENSE_REQUIRED)**.
-3. Otherwise `POST` to Keygen's `validate-key` with `meta.scope.email` so the
-   license is bound to the user → **Allowed** on `meta.valid=true`, else **Denied**
+3. Otherwise `POST` to Keygen's `validate-key` with `meta.scope.user` set to the email, so the
+   license is bound to the user → **Allowed** on a 2xx with `meta.valid=true`, else **Denied**
    with a reason code (`EXPIRED`, `SUSPENDED`, `INVALID`, `NOT_FOUND`).
 
 Network errors default to **fail-closed** (`Denied(NETWORK_ERROR)`). Opt into

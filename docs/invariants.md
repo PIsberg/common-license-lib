@@ -19,7 +19,8 @@ Declared on `internal.Json` and `keygen.KeygenValidator` as `@AIContext(avoids =
 ## Fail closed
 
 A Keygen 5xx, a 401 from a bad API token, a timeout or an `IOException` all map to
-`Denied(NETWORK_ERROR)`. Only `meta.valid=true` produces `Allowed`.
+`Denied(NETWORK_ERROR)`. Only a 2xx response with `meta.valid=true` produces `Allowed`; the
+same flag on a 3xx/4xx is a denial.
 
 Fail-open is the consumer's decision, taken explicitly with
 `LicenseConfig.Builder#allowOnNetworkError(true)`, and it is applied in `LicenseGate`, not in

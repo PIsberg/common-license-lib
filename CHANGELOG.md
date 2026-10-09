@@ -32,6 +32,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in-tree JSON parser recursed once per nesting level without a bound, so a body of a few hundred
   kilobytes of `[` threw `StackOverflowError` out of `check()`, bypassing the fail-closed mapping
   that only catches `IllegalArgumentException`. Nesting is now capped at 256 levels.
+- **Only a 2xx response can produce `Allowed`.** `KeygenValidator` and `LemonSqueezyValidator`
+  trusted `valid: true` in any response body that was not one of the explicitly mapped error
+  statuses, so a 302 or 400 page carrying that flag (an intercepting proxy, a misrouted base URI)
+  let the user through.
+- **`LemonSqueezyValidator` no longer truncates a non-integral `store_id`/`product_id`.** The
+  scope check used `Number#longValue()`, so `"store_id": 42.9` matched store 42. Only integer
+  literals count as scope evidence now.
 - The JSON parser rejects `\u` escapes with a sign or non-ASCII hex digits (`\u-001` used to
   decode to U+FFFF).
 - `LicenseConfig.toString()` now includes `mockMode`, the one flag that lets every user through.

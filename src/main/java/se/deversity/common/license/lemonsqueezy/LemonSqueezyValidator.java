@@ -161,7 +161,9 @@ public final class LemonSqueezyValidator {
 
         String keyStatus = lower(str(Json.get(parsed, "license_key", "status")));
 
-        if (!Boolean.TRUE.equals(Json.get(parsed, "valid"))) {
+        // Only a 2xx is LemonSqueezy answering. A 3xx/4xx body that happens to say valid=true
+        // (an intercepting proxy, a misrouted base URI) is not evidence of a license.
+        if (status / 100 != 2 || !Boolean.TRUE.equals(Json.get(parsed, "valid"))) {
             return denyForInvalid(status, keyStatus, str(Json.get(parsed, "error")));
         }
 
@@ -265,7 +267,11 @@ public final class LemonSqueezyValidator {
         return s == null ? null : s.toLowerCase(Locale.ROOT);
     }
 
+    /**
+     * Integral JSON numbers only. {@code Json} yields {@code Long} for integer literals and
+     * {@code Double} otherwise; {@code Number#longValue()} would truncate {@code 42.9} into store 42.
+     */
     private static Long asLong(Object o) {
-        return o instanceof Number n ? n.longValue() : null;
+        return o instanceof Long l ? l : null;
     }
 }

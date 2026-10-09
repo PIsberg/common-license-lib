@@ -154,7 +154,9 @@ public final class KeygenValidator {
         Object codeObj  = Json.get(parsed, "meta", "code");
         String code = codeObj == null ? "" : codeObj.toString();
 
-        if (Boolean.TRUE.equals(validObj)) {
+        // Only a 2xx is Keygen answering. A 3xx/4xx body that happens to say valid=true (an
+        // intercepting proxy, a misrouted base URI) is not evidence of a license.
+        if (status / 100 == 2 && Boolean.TRUE.equals(validObj)) {
             return new LicenseResult.Allowed(LicenseResult.AllowedReason.LICENSE_VALID);
         }
 

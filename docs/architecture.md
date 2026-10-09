@@ -55,15 +55,15 @@ check(email, licenseKey)
  │       └─ POST Keygen validate-key
  │           ├─ IO / timeout → Denied(NETWORK_ERROR)
  │           │   └─ allowOnNetworkError=true → Allowed(NETWORK_ERROR_ALLOWED)
- │           ├─ HTTP 404     → Denied(LICENSE_NOT_FOUND)
- │           ├─ HTTP 4xx/5xx → Denied(NETWORK_ERROR)
- │           ├─ meta.valid=true  → Allowed(LICENSE_VALID)
- │           └─ meta.valid=false → Denied(LICENSE_EXPIRED | SUSPENDED | INVALID …)
+ │           ├─ HTTP 404             → Denied(LICENSE_NOT_FOUND)
+ │           ├─ HTTP 401/403/429/5xx → Denied(NETWORK_ERROR)
+ │           ├─ 2xx + meta.valid=true → Allowed(LICENSE_VALID)
+ │           └─ anything else         → Denied(LICENSE_EXPIRED | SUSPENDED | INVALID …)
 ```
 
 **Fail-closed by default.** Any network error produces `Denied(NETWORK_ERROR)` unless the consumer explicitly opts in via `LicenseConfig.Builder#allowOnNetworkError(true)`.
 
-**`KeygenValidator.mapResponse()`** treats HTTP 200 with `meta.valid=false` as a normal denial (not an error), because Keygen returns 200 for expired/suspended keys and puts the outcome in the JSON body. HTTP 401/403 (bad API token) and 5xx surface as `NETWORK_ERROR` to avoid accidentally granting access due to misconfigured credentials.
+**`KeygenValidator.mapResponse()`** treats HTTP 200 with `meta.valid=false` as a normal denial (not an error), because Keygen returns 200 for expired/suspended keys and puts the outcome in the JSON body. HTTP 401/403 (bad API token), 429 and 5xx surface as `NETWORK_ERROR` to avoid accidentally granting access due to misconfigured credentials. Only a 2xx can produce `Allowed`: a 3xx/4xx body that says `valid=true` (an intercepting proxy, a misrouted base URI) is denied. `LemonSqueezyValidator` applies the same 2xx rule, and accepts `meta.store_id` / `meta.product_id` only as integer literals, so `42.9` is not store 42.
 
 ---
 
