@@ -28,6 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Addresses were punycoded before lookup but overrides were not, so `bücher.example` as an override
   never matched, and a Unicode commercial override could not remove the punycode free entry for the
   same domain, inverting the documented "commercial wins" precedence.
+- **A deeply nested response body is now a `Denied(NETWORK_ERROR)`, not a thrown `Error`.** The
+  in-tree JSON parser recursed once per nesting level without a bound, so a body of a few hundred
+  kilobytes of `[` threw `StackOverflowError` out of `check()`, bypassing the fail-closed mapping
+  that only catches `IllegalArgumentException`. Nesting is now capped at 256 levels.
+- The JSON parser rejects `\u` escapes with a sign or non-ASCII hex digits (`\u-001` used to
+  decode to U+FFFF).
 - `LicenseConfig.toString()` now includes `mockMode`, the one flag that lets every user through.
 
 ## [0.5.0] - 2026-08-06

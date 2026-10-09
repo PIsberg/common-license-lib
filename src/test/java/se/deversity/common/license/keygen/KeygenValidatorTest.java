@@ -161,6 +161,15 @@ class KeygenValidatorTest {
     }
 
     @Test
+    void mapsPathologicallyNestedBodyToNetworkError() {
+        // Must come back as a result, not as a StackOverflowError thrown out of validate().
+        responseStatus = 200;
+        responseBody = "{\"meta\":" + "[".repeat(200_000) + "]".repeat(200_000) + "}";
+        LicenseResult r = newValidator().validate("KEY", "x@corp.com");
+        assertEquals(DeniedReason.NETWORK_ERROR, ((LicenseResult.Denied) r).reason());
+    }
+
+    @Test
     void omitsAuthorizationHeaderWhenApiKeyIsNull() {
         responseStatus = 200;
         responseBody = "{\"meta\":{\"valid\":true,\"code\":\"VALID\"}}";

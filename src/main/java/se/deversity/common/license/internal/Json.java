@@ -84,9 +84,18 @@ public final class Json {
         return b.toString();
     }
 
+    /**
+     * Nesting bound. The parser recurses once per object/array level, so an unbounded depth turns
+     * a hostile or corrupt body into a {@link StackOverflowError} that escapes every caller's
+     * {@code IllegalArgumentException} handler, and with it the fail-closed mapping. Real
+     * Keygen and LemonSqueezy responses nest fewer than ten levels.
+     */
+    static final int MAX_DEPTH = 256;
+
     private static final class Parser {
         final String src;
         int pos;
+        int depth;
 
         Parser(String src) {
             this.src = src;
@@ -98,14 +107,26 @@ public final class Json {
                 throw err("Unexpected end of input");
             }
             char c = src.charAt(pos);
+            if ((c == '{' || c == '[') && depth >= MAX_DEPTH) {
+                throw err("Nesting deeper than " + MAX_DEPTH);
+            }
             return switch (c) {
-                case '{' -> readObject();
-                case '[' -> readArray();
+                case '{' -> readNested(this::readObject);
+                case '[' -> readNested(this::readArray);
                 case '"' -> readString();
                 case 't', 'f' -> readBool();
                 case 'n' -> readNull();
                 default -> readNumber();
             };
+        }
+
+        Object readNested(java.util.function.Supplier<Object> reader) {
+            depth++;
+            try {
+                return reader.get();
+            } finally {
+                depth--;
+            }
         }
 
         Map<String, Object> readObject() {
@@ -183,7 +204,15 @@ public final class Json {
                             if (pos + 4 > src.length()) {
                                 throw err("Truncated \\u escape");
                             }
-                            int cp = Integer.parseInt(src.substring(pos, pos + 4), 16);
+                            int cp = 0;
+                            for (int i = 0; i < 4; i++) {
+                                // Not Integer.parseInt: it accepts a leading '+' or '-'.
+                                int d = hexDigit(src.charAt(pos + i));
+                                if (d < 0) {
+                                    throw err("Bad \\u escape");
+                                }
+                                cp = (cp << 4) | d;
+                            }
                             pos += 4;
                             b.append((char) cp);
                         }
@@ -236,6 +265,14 @@ public final class Json {
             } catch (NumberFormatException e) {
                 return Double.parseDouble(num);
             }
+        }
+
+        /** ASCII hex only; {@link Character#digit(char, int)} also accepts fullwidth and other digits. */
+        static int hexDigit(char c) {
+            if (c >= '0' && c <= '9') return c - '0';
+            if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+            if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+            return -1;
         }
 
         boolean isNumChar(char c) {
