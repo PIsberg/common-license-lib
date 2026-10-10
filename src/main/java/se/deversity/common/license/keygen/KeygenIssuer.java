@@ -2,7 +2,6 @@ package se.deversity.common.license.keygen;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -12,6 +11,7 @@ import java.util.Objects;
 
 import se.deversity.common.license.LicenseException;
 import se.deversity.common.license.internal.Json;
+import se.deversity.common.license.internal.Urls;
 
 import se.deversity.vibetags.annotations.AIAudit;
 import se.deversity.vibetags.annotations.AIContext;
@@ -79,7 +79,7 @@ public final class KeygenIssuer {
         }
         // 409/422: already exists (exact code differs by account setup) — fetch by email instead.
         if (resp.statusCode() == 409 || resp.statusCode() == 422) {
-            HttpResponse<String> get = send(get("/users/" + encodePath(email)));
+            HttpResponse<String> get = send(get("/users/" + Urls.encodePathSegment(email)));
             if (get.statusCode() == 200) {
                 return idOf(get, "user lookup");
             }
@@ -183,9 +183,5 @@ public final class KeygenIssuer {
             // Malformed error body; the status code is still the important part.
         }
         return new LicenseException("Keygen " + what + " failed, HTTP " + resp.statusCode() + title);
-    }
-
-    private static String encodePath(String s) {
-        return URLEncoder.encode(s, StandardCharsets.UTF_8);
     }
 }

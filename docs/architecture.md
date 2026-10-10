@@ -12,7 +12,7 @@
 | `license/email/` | Email classification interface and default allow-list implementation |
 | `license/keygen/` | HTTP client wrapper for Keygen's `validate-key` REST endpoint |
 | `license/lemonsqueezy/` | Checkout URL builder and webhook HMAC-SHA256 verifier |
-| `license/internal/` | Purpose-built minimal JSON parser — **not public API** |
+| `license/internal/` | Purpose-built minimal JSON parser (`Json`) and URL path-segment encoder (`Urls`) — **not public API** |
 
 There are no singletons, no DI framework, no reflection, and no third-party runtime dependencies. Every consumer supplies its own `LicenseConfig`, so multiple `LicenseGate` instances can coexist in the same JVM against different Keygen accounts.
 

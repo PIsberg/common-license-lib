@@ -73,6 +73,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Under the default `EmailBinding.DOMAIN`, a consumer that forced `gmail.com` commercial with
   `additionalCommercialProviders` let one purchase by `someone@gmail.com` license every gmail user.
   A buyer on a bundled free-mail domain is now matched by exact address under either binding.
+- **URL path segments are percent-encoded, not form-encoded.** `KeygenIssuer`'s user lookup and
+  the variant id in `LemonSqueezyCheckout` used `URLEncoder`, which turns a space into `+`; in a
+  path that is a literal plus, so the value sent was a different value. A space is now `%20`. No
+  realistic input hit this (emails rarely hold a space, variant ids are numeric).
 
 ## [0.5.0] - 2026-08-06
 
