@@ -9,9 +9,15 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.ProxySelector;
+import java.net.SocketAddress;
 import java.net.URI;
+import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -90,6 +96,44 @@ class LicenseGateTest {
         LicenseResult r = newGate(false).check("bob@acme-corp.com", "KEY-OK");
         assertEquals(LicenseResult.AllowedReason.LICENSE_VALID,
             ((LicenseResult.Allowed) r).reason());
+    }
+
+    @Test
+    void injectedHttpClientCarriesTheValidationRequest() {
+        // keygen.invalid never resolves, so the only way to reach the loopback server is through
+        // the injected client's proxy. A gate that built its own client would get NETWORK_ERROR.
+        responseStatus = 200;
+        responseBody = "{\"meta\":{\"valid\":true,\"code\":\"VALID\"}}";
+        List<URI> proxied = new CopyOnWriteArrayList<>();
+        Proxy loopback = new Proxy(Proxy.Type.HTTP, server.getAddress());
+        HttpClient injected = HttpClient.newBuilder()
+            .proxy(new ProxySelector() {
+                @Override
+                public List<Proxy> select(URI uri) {
+                    proxied.add(uri);
+                    return List.of(loopback);
+                }
+
+                @Override
+                public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+                }
+            })
+            .build();
+
+        LicenseGate gate = LicenseGate.of(LicenseConfig.builder()
+            .keygenAccountId("acct_x")
+            .keygenApiKey("api_key_x")
+            .keygenBaseUri(URI.create("http://keygen.invalid"))
+            .keygenTimeout(Duration.ofSeconds(3))
+            .httpClient(injected)
+            .build());
+
+        LicenseResult r = gate.check("bob@acme-corp.com", "KEY-OK");
+
+        assertEquals(LicenseResult.AllowedReason.LICENSE_VALID,
+            assertInstanceOf(LicenseResult.Allowed.class, r).reason());
+        assertEquals(1, proxied.size(), "validation request should go through the injected client");
+        assertEquals("keygen.invalid", proxied.get(0).getHost());
     }
 
     @Test

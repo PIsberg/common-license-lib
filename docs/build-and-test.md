@@ -65,9 +65,11 @@ No test reaches the public internet.
 The loopback server serves canned Keygen response bodies, so the tests exercise the real
 `HttpClient` code path including timeouts and status mapping.
 
-One knob on `LicenseConfig` exists for consumers but is **not covered by any test**: the
-injectable `httpClient(...)`. Nothing currently fails if it regresses. Worth a test before it is
-relied on. (`mockMode(true)` is covered by `LicenseConfigTest` and `LicenseGateLemonSqueezyTest`.)
+The injectable `httpClient(...)` is covered by `LicenseGateTest`: the injected client routes
+through a recording `ProxySelector` to the loopback server while `keygenBaseUri` points at an
+unresolvable `keygen.invalid` host, so the check is only allowed if the gate really used the
+injected client. (`mockMode(true)` is covered by `LicenseConfigTest` and
+`LicenseGateLemonSqueezyTest`.)
 
 ## VibeTags in the build
 

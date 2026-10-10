@@ -160,4 +160,17 @@ class KeygenIssuerTest {
             requests.get(0).body());
         assertEquals("/v1/accounts/acct-1/users/a%22b%40corp.com", requests.get(1).path());
     }
+
+    @Test
+    void encodesSpaceAndPlusInTheLookupPathAsPathSegmentNotForm() {
+        // A quoted local part may hold a space. In a path '+' is a literal plus, so form encoding
+        // (space -> '+') would look up a different user.
+        responses.add(new Scripted(422, "{\"errors\":[{\"title\":\"dup\"}]}"));
+        responses.add(new Scripted(200, "{\"data\":{\"id\":\"user-9\",\"type\":\"users\"}}"));
+
+        issuer.ensureUser("\"ada lovelace+x\"@corp.com");
+
+        assertEquals("/v1/accounts/acct-1/users/%22ada%20lovelace%2Bx%22%40corp.com",
+            requests.get(1).path());
+    }
 }

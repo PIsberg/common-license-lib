@@ -64,6 +64,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The JSON parser rejects `\u` escapes with a sign or non-ASCII hex digits (`\u-001` used to
   decode to U+FFFF).
 - `LicenseConfig.toString()` now includes `mockMode`, the one flag that lets every user through.
+- **`PaddleWebhook`'s replay check tolerates a receiver clock that runs behind Paddle's.** The
+  `maxAgeSeconds` overload rejected any `ts` ahead of the local clock, so a server whose clock was
+  one second slow rejected fresh webhooks until Paddle retried them. The window is now symmetric:
+  `ts` may be up to `maxAgeSeconds` behind or ahead. The past side, which is where a replay comes
+  from, is unchanged.
+- **A LemonSqueezy licence bought from a free-mail address no longer covers the whole provider.**
+  Under the default `EmailBinding.DOMAIN`, a consumer that forced `gmail.com` commercial with
+  `additionalCommercialProviders` let one purchase by `someone@gmail.com` license every gmail user.
+  A buyer on a bundled free-mail domain is now matched by exact address under either binding.
+- **URL path segments are percent-encoded, not form-encoded.** `KeygenIssuer`'s user lookup and
+  the variant id in `LemonSqueezyCheckout` used `URLEncoder`, which turns a space into `+`; in a
+  path that is a literal plus, so the value sent was a different value. A space is now `%20`. No
+  realistic input hit this (emails rarely hold a space, variant ids are numeric).
 
 ## [0.5.0] - 2026-08-06
 

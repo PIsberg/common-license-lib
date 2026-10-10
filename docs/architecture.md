@@ -12,7 +12,7 @@
 | `license/email/` | Email classification interface and default allow-list implementation |
 | `license/keygen/` | HTTP client wrapper for Keygen's `validate-key` REST endpoint |
 | `license/lemonsqueezy/` | Checkout URL builder and webhook HMAC-SHA256 verifier |
-| `license/internal/` | Purpose-built minimal JSON parser — **not public API** |
+| `license/internal/` | Purpose-built minimal JSON parser (`Json`) and URL path-segment encoder (`Urls`) — **not public API** |
 
 There are no singletons, no DI framework, no reflection, and no third-party runtime dependencies. Every consumer supplies its own `LicenseConfig`, so multiple `LicenseGate` instances can coexist in the same JVM against different Keygen accounts.
 
@@ -106,8 +106,9 @@ The recommended pattern is to instantiate one `LicenseGate` at application start
 | `consumer-fixture/` (separate Maven project) | Smoke-tests the library from the outside as a consumer dependency would see it |
 
 `LicenseConfig.mockMode(true)` is covered by `LicenseConfigTest` (builder placeholders, `toString`)
-and `LicenseGateLemonSqueezyTest` (the gate short-circuit). The injectable `httpClient(...)` is a
-consumer-facing feature that no test exercises; nothing fails if it regresses.
+and `LicenseGateLemonSqueezyTest` (the gate short-circuit). The injectable `httpClient(...)` is
+covered by `LicenseGateTest`, which proves the validation request goes through the injected
+client rather than one the gate builds itself.
 
 Commands and the CI matrix are in [build-and-test.md](build-and-test.md).
 

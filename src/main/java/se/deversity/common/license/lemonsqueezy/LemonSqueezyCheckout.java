@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
 
+import se.deversity.common.license.internal.Urls;
+
 /**
  * Build pre-filled checkout URLs for LemonSqueezy's hosted storefront.
  *
@@ -73,7 +75,8 @@ public final class LemonSqueezyCheckout {
                     + encode(e.getValue()));
             }
         }
-        String base = "https://" + storeSubdomain + ".lemonsqueezy.com/buy/" + encode(variantId);
+        String base = "https://" + storeSubdomain + ".lemonsqueezy.com/buy/"
+            + Urls.encodePathSegment(variantId);
         return URI.create(qs.length() == 0 ? base : base + "?" + qs);
     }
 

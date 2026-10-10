@@ -18,6 +18,14 @@ class LemonSqueezyCheckoutTest {
     }
 
     @Test
+    void encodesVariantIdAsAPathSegment() {
+        // Form encoding would turn the space into '+', which in a path is a literal plus.
+        URI u = checkout.buildCheckoutUrl(null, "VAR 1+2", null);
+        assertEquals("/buy/VAR%201%2B2", u.getRawPath());
+        assertEquals("/buy/VAR 1+2", u.getPath());
+    }
+
+    @Test
     void prefillsEmailUrlEncoded() {
         URI u = checkout.buildCheckoutUrl("ada@corp.com", "VAR123", null);
         assertTrue(u.toString().contains("checkout%5Bemail%5D=ada%40corp.com"),

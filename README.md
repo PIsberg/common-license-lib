@@ -93,6 +93,10 @@ LicenseConfig.builder()
     .build();
 ```
 
+Forcing a bundled free-mail domain such as `gmail.com` into the commercial bucket is allowed. With
+the LemonSqueezy provider, a licence bought from such a domain covers only the buyer's exact address,
+even under the default `DOMAIN` binding: a shared mailbox provider is not an organisation.
+
 Or plug in your own classifier:
 
 ```java

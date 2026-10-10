@@ -238,6 +238,38 @@ class LemonSqueezyValidatorTest {
     }
 
     @Test
+    void freeMailBuyerDoesNotLicenseEveryoneOnThatProviderUnderDomainBinding() {
+        // Reachable when a consumer forces gmail.com commercial: one gmail purchase must not
+        // cover every gmail user in the world. A shared mailbox domain is not an organisation.
+        responseStatus = 200;
+        responseBody = validPayload("active", OUR_STORE, OUR_PRODUCT, "buyer@gmail.com");
+
+        LicenseResult r = newValidator().validate("KEY", "stranger@gmail.com");
+
+        assertEquals(DeniedReason.LICENSE_INVALID, ((LicenseResult.Denied) r).reason());
+    }
+
+    @Test
+    void freeMailDomainCheckIgnoresCase() {
+        responseStatus = 200;
+        responseBody = validPayload("active", OUR_STORE, OUR_PRODUCT, "buyer@GMail.com");
+
+        LicenseResult r = newValidator().validate("KEY", "stranger@gmail.COM");
+
+        assertEquals(DeniedReason.LICENSE_INVALID, ((LicenseResult.Denied) r).reason());
+    }
+
+    @Test
+    void freeMailBuyerThemselvesIsStillAcceptedUnderDomainBinding() {
+        responseStatus = 200;
+        responseBody = validPayload("active", OUR_STORE, OUR_PRODUCT, "buyer@gmail.com");
+
+        LicenseResult r = newValidator().validate("KEY", " Buyer@Gmail.com ");
+
+        assertInstanceOf(LicenseResult.Allowed.class, r);
+    }
+
+    @Test
     void unparseableAddressesDoNotMatchEachOther() {
         responseStatus = 200;
         responseBody = validPayload("active", OUR_STORE, OUR_PRODUCT, "not-an-email");
