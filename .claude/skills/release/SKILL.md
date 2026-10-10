@@ -89,7 +89,8 @@ green, then tag and push the tag to publish.
 ## 5. Watch CI — and know the difference between "red" and "not running"
 
 `tests.yml` builds Maven on Java 21 and 25, Gradle on Java 21, and runs the consumer fixture and
-the examples. Poll with:
+the examples. Its `Central Bundle Shape` job builds the bundle Central will validate, on the Maven
+`publish.yml` pins; it is the only check that does, so green has to include it. Poll with:
 
 ```bash
 gh pr checks <pr-number>
@@ -115,6 +116,14 @@ git push origin v<version>
 ```
 
 Pushing the tag is the trigger — `publish.yml` deploys to Maven Central and cannot be undone.
+Watch the run (`gh run watch <id> --exit-status`) and confirm the pom answers 200 on
+repo1.maven.org; a green run is the claim, the pom is the proof.
+
+If Central rejects the bundle, nothing is published and the version stays free. Never re-cut
+the tag. Fix the cause on `main` through a PR, then finish the release from the same tag with
+`gh workflow run publish.yml --ref main -f tag=v<version>` (the user's call, like the tag push).
+`docs/releasing.md`, "When the publish fails", has the procedure.
+
 Confirm with the user before running the `git push origin v<version>` step even if they already
 approved the release in general; tagging is the one command in this whole flow that is not
 reversible.

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`publish.yml` deploys on a pinned Maven 3.9.16.** The runner image's Maven moved to 3.10, under
+  which `central-publishing-maven-plugin` 0.11.0 zips the resolver's `maven-metadata-local.xml` and
+  `_remote.repositories` into the bundle, and Central rejected the v0.6.0 publish twice. The
+  workflow now installs 3.9.16 from Maven Central, checks its SHA-512, and refuses to deploy on any
+  other Maven. A `workflow_dispatch` with a `tag` input finishes a release from its existing tag.
+- A new `Central Bundle Shape` CI job builds the bundle on every pull request with the pinned Maven
+  and checks its layout, so a toolchain change that breaks publishing fails a PR instead of a
+  release. CI only: nothing changes in the jar.
+
 ## [0.6.0] - 2026-10-10
 
 A correctness and hardening release with no new API outside the `internal` package. Most of the
