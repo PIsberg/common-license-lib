@@ -4,6 +4,15 @@ on:
   push:
     tags:
       - 'v*'
+  # Finish a release whose publish failed without re-cutting its tag. A failed Central validation
+  # publishes nothing and leaves the version free. A dispatch runs this file as it is on the branch
+  # it is dispatched from and builds the source of the tag, so a fix to this workflow on main also
+  # finishes a release whose tag predates the fix.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to build and publish, e.g. v0.6.0'
+        required: true
 
 permissions:
   contents: read
@@ -16,6 +25,20 @@ jobs:
     permissions:
       contents: write
       id-token: write  # required for keyless cosign signing via OIDC
+
+    # The Maven the deploy runs on, in place of the runner image's. The ubuntu-24.04 image moved to
+    # Maven 3.10 in its 20261004 release, and central-publishing-maven-plugin 0.11.0 cannot bundle
+    # under it: it zipped Maven 3.10's maven-metadata-local.xml and _remote.repositories beside the
+    # artifacts, and Central rejected v0.6.0 ("Bundle has content that does NOT have a .pom
+    # file"). Stay on 3.9 until a plugin release handles 3.10. The Central Bundle Shape job in
+    # tests.yml reads both values from here and builds the bundle with them on every pull request.
+    env:
+      MAVEN_VERSION: '3.9.16'
+      # SHA-512 of apache-maven-<MAVEN_VERSION>-bin.tar.gz, the value Apache publishes beside it.
+      MAVEN_SHA512: '831a8591fe20c8243b1dbe7d71e3244f31d1665b0804b2e825e38cbbe5ce0cafb8338851f90780735568773e0a6cd07bbec107cda0b896b008b861075358b6f6'
+      # The tag being published: the pushed tag, or the dispatch input. Read through env, never
+      # interpolated into a script.
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
 
     steps:
       - name: Harden the runner
@@ -42,6 +65,21 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Empty on a tag push, which keeps the default checkout of the tag. The refs/tags/ prefix
+          # makes a dispatch fail on anything that is not a tag.
+          ref: ${{ github.event.inputs.tag && format('refs/tags/{0}', github.event.inputs.tag) || '' }}
+
+      # A tag whose pom says another version would publish that other version under this tag's
+      # name: the GitHub release and its cosign bundles would describe the wrong jar.
+      - name: Refuse a tag that does not match the pom version
+        run: |
+          pom_version="$(sed -n '0,/^ *<version>/{s|^ *<version>\([^<]*\)</version>.*|\1|p}' pom.xml)"
+          if [ "v${pom_version}" != "$TAG" ]; then
+            echo "::error::tag $TAG does not match pom.xml version $pom_version; not publishing"
+            exit 1
+          fi
+          echo "Publishing $pom_version from $TAG"
 
       - name: Set up JDK 21
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
@@ -52,6 +90,28 @@ jobs:
           server-id: central
           server-username: MAVEN_CENTRAL_USERNAME
           server-password: MAVEN_CENTRAL_PASSWORD
+
+      # Inline, not a script: a dispatch checks out the tag it publishes, and that tag can predate
+      # any script added for this. The Central Bundle Shape job in tests.yml runs the same block.
+      - name: Install the pinned Maven
+        run: |
+          archive="apache-maven-${MAVEN_VERSION}-bin.tar.gz"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/$archive" \
+            "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/${MAVEN_VERSION}/${archive}"
+          echo "${MAVEN_SHA512}  $RUNNER_TEMP/$archive" | sha512sum --check --strict
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/apache-maven-${MAVEN_VERSION}/bin" >> "$GITHUB_PATH"
+
+      # Before anything is signed or uploaded. A deploy on another Maven is the failure the pin
+      # exists to prevent, so this refuses to start one rather than trusting the PATH.
+      - name: Refuse to deploy on any Maven but the pinned one
+        run: |
+          version="$(mvn --version)"
+          printf '%s\n' "$version"
+          case "$version" in
+            "Apache Maven ${MAVEN_VERSION} "*) ;;
+            *) echo "::error::mvn on PATH is not Maven ${MAVEN_VERSION}; not deploying with it"; exit 1 ;;
+          esac
 
       - name: Import GPG key
         run: |
@@ -69,7 +129,7 @@ jobs:
 
       - name: Extract version from tag
         id: version
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+        run: echo "VERSION=${TAG#v}" >> $GITHUB_OUTPUT
 
       - name: Install cosign
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
@@ -93,15 +153,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
-          gh release create "${{ github.ref_name }}" \
+          gh release create "$TAG" \
             target/common-license-lib-${VERSION}.jar \
             target/common-license-lib-${VERSION}.jar.bundle \
             target/common-license-lib-${VERSION}-sources.jar \
             target/common-license-lib-${VERSION}-sources.jar.bundle \
             target/common-license-lib-${VERSION}-javadoc.jar \
             target/common-license-lib-${VERSION}-javadoc.jar.bundle \
-            --title "Release ${{ github.ref_name }}" \
-            --notes "## common-license-lib ${{ github.ref_name }}
+            --title "Release $TAG" \
+            --notes "## common-license-lib $TAG
 
           See [CHANGELOG.md](https://github.com/PIsberg/common-license-lib/blob/main/CHANGELOG.md) for what's new.
 

@@ -121,3 +121,71 @@ jobs:
 
       - name: Gradle build
         run: ./gradlew --no-daemon build
+
+  # Builds the bundle publish.yml would upload to Maven Central, on the Maven publish.yml deploys
+  # with, and checks its layout. Central validates a bundle only after the release tag exists, so
+  # without this a toolchain change that breaks the bundle is found by a failed release: v0.6.0 was
+  # rejected twice before this job existed. A green Test Suite says nothing about publishing.
+  central-bundle:
+    name: Central Bundle Shape
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Harden the runner
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            agent.api.stepsecurity.io:443
+            api.adoptium.net:443
+            api.github.com:443
+            github.com:443
+            objects.githubusercontent.com:443
+            release-assets.githubusercontent.com:443
+            repo.maven.apache.org:443
+            repo1.maven.org:443
+
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Java
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Test the bundle checker
+        run: bash .github/scripts/check-central-bundle.test.sh
+
+      # The pin lives in publish.yml only; reading it from there means this job always tests the
+      # Maven a release would run on.
+      - name: Read the Maven pin from publish.yml
+        run: |
+          for key in MAVEN_VERSION MAVEN_SHA512; do
+            value="$(sed -n "s/^ *$key: '\([^']*\)'.*/\1/p" .github/workflows/publish.yml)"
+            if [ -z "$value" ]; then
+              echo "::error::no $key in publish.yml"
+              exit 1
+            fi
+            echo "$key=$value" >> "$GITHUB_ENV"
+          done
+          # If the two install blocks drift, this job would test a Maven install no release runs.
+          block() { awk '/^ *- name: Install the pinned Maven$/{f=1} f&&/^$/{exit} f' "$1"; }
+          if ! diff <(block .github/workflows/publish.yml) <(block .github/workflows/tests.yml); then
+            echo "::error::the Install the pinned Maven step differs between publish.yml and tests.yml"
+            exit 1
+          fi
+
+      # The same block as publish.yml's "Install the pinned Maven".
+      - name: Install the pinned Maven
+        run: |
+          archive="apache-maven-${MAVEN_VERSION}-bin.tar.gz"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/$archive" \
+            "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/${MAVEN_VERSION}/${archive}"
+          echo "${MAVEN_SHA512}  $RUNNER_TEMP/$archive" | sha512sum --check --strict
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/apache-maven-${MAVEN_VERSION}/bin" >> "$GITHUB_PATH"
+
+      - name: Build and check the Central bundle
+        run: bash .github/scripts/build-central-bundle.sh

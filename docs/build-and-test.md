@@ -14,6 +14,7 @@ consumers see the project.
 | VibeTags processor | 1.4.0 (same in `pom.xml` and `build.gradle.kts`) |
 | CI test matrix (Maven) | Java 21 and Java 25 |
 | CI test matrix (Gradle) | Java 21 |
+| Maven that `publish.yml` deploys with | 3.9.16, pinned by SHA-512 in `publish.yml` (see [releasing.md](releasing.md#the-pinned-maven)) |
 
 ## Gradle
 
@@ -45,6 +46,22 @@ mvn -Dmaven.repo.local=.m2/repository -f examples/minimal-gate/pom.xml test
 
 Skipping the `install` step makes the fixture resolve `common-license-lib` from Maven Central,
 so it can pass against a released jar while the working tree is broken.
+
+## The Central bundle check
+
+The `Central Bundle Shape` job in `tests.yml` builds the bundle `publish.yml` would upload, on
+the Maven `publish.yml` pins, with the upload pointed at `127.0.0.1:9` and throwaway credentials,
+then checks its layout with `.github/scripts/check-central-bundle.sh`: every file directly in
+`se/deversity/common/common-license-lib/<version>/` and named for it, the pom and the three jars
+present, an `.md5` and `.sha1` beside each file. The checker's own cases are in
+`check-central-bundle.test.sh` and run first in the same job:
+
+```bash
+bash .github/scripts/check-central-bundle.test.sh
+```
+
+It does not check signatures (the PR bundle is unsigned) or the pom's content, which Central also
+validates.
 
 ## The downstream modules
 
