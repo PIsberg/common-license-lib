@@ -315,6 +315,32 @@ class LemonSqueezyValidatorTest {
     }
 
     @Test
+    void validFlagOnANonSuccessStatusIsNotTrusted() {
+        // Only a 2xx is LemonSqueezy answering the question; a fully in-scope payload on a
+        // 3xx/4xx (intercepting proxy, misrouted base URI) must not let the user through.
+        for (int status : new int[] {302, 400, 422}) {
+            responseStatus = status;
+            responseBody = validPayload("active", OUR_STORE, OUR_PRODUCT, "ada@corp.com");
+            LicenseResult r = newValidator().validate("KEY", "ada@corp.com");
+            assertInstanceOf(LicenseResult.Denied.class, r, "HTTP " + status);
+        }
+    }
+
+    @Test
+    void nonIntegralStoreIdDoesNotTruncateIntoOurStore() {
+        // Number#longValue() truncates: 42.9 became 42 and matched OUR_STORE. A store id is an
+        // integer; anything else is not evidence the key is ours.
+        responseStatus = 200;
+        responseBody = validPayload("active", OUR_STORE, OUR_PRODUCT, "ada@corp.com")
+            .replace("\"store_id\":" + OUR_STORE, "\"store_id\":" + OUR_STORE + ".9");
+        assertTrue(responseBody.contains("\"store_id\":42.9"), responseBody);
+
+        LicenseResult r = newValidator().validate("KEY", "ada@corp.com");
+
+        assertEquals(DeniedReason.LICENSE_INVALID, ((LicenseResult.Denied) r).reason());
+    }
+
+    @Test
     void mapsMalformedJsonToNetworkError() {
         responseStatus = 200;
         responseBody = "not-json";

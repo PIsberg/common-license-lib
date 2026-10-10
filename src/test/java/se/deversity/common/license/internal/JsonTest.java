@@ -47,6 +47,28 @@ class JsonTest {
     }
 
     @Test
+    void rejectsSignedOrNonHexUnicodeEscapes() {
+        // Integer.parseInt(.., 16) accepts a leading sign, so "\-001" decoded to U+FFFF and
+        // "\+041" to 'A' instead of being rejected as the malformed escapes they are.
+        assertThrows(IllegalArgumentException.class, () -> Json.parse("\"\\u+041\""));
+        assertThrows(IllegalArgumentException.class, () -> Json.parse("\"\\u-001\""));
+        assertThrows(IllegalArgumentException.class, () -> Json.parse("\"\\uzzzz\""));
+        assertEquals("A", Json.parse("\"\\u0041\""));
+    }
+
+    @Test
+    void deepNestingIsRejectedAsMalformedInsteadOfOverflowingTheStack() {
+        // The parser recurses per nesting level. Without a bound, a response body of a few
+        // hundred kilobytes of '[' threw StackOverflowError, an Error no validator catches, so
+        // check() threw instead of failing closed with Denied(NETWORK_ERROR).
+        String deep = "[".repeat(200_000) + "]".repeat(200_000);
+        assertThrows(IllegalArgumentException.class, () -> Json.parse(deep));
+
+        String fine = "[".repeat(64) + "]".repeat(64);
+        assertNotNull(Json.parse(fine));
+    }
+
+    @Test
     void rejectsTrailingContent() {
         assertThrows(IllegalArgumentException.class, () -> Json.parse("1 2"));
     }

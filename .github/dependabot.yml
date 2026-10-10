@@ -5,7 +5,18 @@ updates:
     schedule:
       interval: daily
 
+  # The library is built by both Maven and Gradle and the two declare their versions
+  # separately. Covering only Maven let build.gradle.kts drift (VibeTags 1.3.2 vs 1.3.8),
+  # and the two builds then wrote different generated guardrails.
   - package-ecosystem: maven
+    directories:
+      - /
+      - /consumer-fixture
+      - /examples/minimal-gate
+    schedule:
+      interval: daily
+
+  - package-ecosystem: gradle
     directory: /
     schedule:
       interval: daily

@@ -28,7 +28,7 @@ There are no singletons, no DI framework, no reflection, and no third-party runt
 
 **`LicenseConfig` is an immutable value object** built via a fluent builder. It holds all credentials, timeout, and behavioural flags (`allowOnNetworkError`, `mockMode`). `toString()` redacts secret fields. The builder validates that Keygen credentials are present unless `mockMode` is set.
 
-**`EmailClassifier` is a `@FunctionalInterface`** so consumers can replace the entire classification logic with a lambda. The default implementation (`AllowListEmailClassifier`) unions the bundled free-provider list with `additionalFreeProviders` and then subtracts `additionalCommercialProviders` (commercial overrides always win). Domain normalisation uses lowercase + IDN punycode so international domains work correctly.
+**`EmailClassifier` is a `@FunctionalInterface`** so consumers can replace the entire classification logic with a lambda. The default implementation (`AllowListEmailClassifier`) unions the bundled free-provider list with `additionalFreeProviders` and then subtracts `additionalCommercialProviders` (commercial overrides always win). Domain normalisation (`Locale.ROOT` lowercase + IDN punycode) applies to addresses and to both override sets, so international domains work correctly whichever spelling a consumer uses.
 
 **`LemonSqueezyCheckout` and `LemonSqueezyWebhook`** are standalone stateless helpers. Neither requires a `LicenseGate` instance — a consumer server verifying webhooks does not need Keygen credentials in scope.
 
@@ -55,15 +55,15 @@ check(email, licenseKey)
  │       └─ POST Keygen validate-key
  │           ├─ IO / timeout → Denied(NETWORK_ERROR)
  │           │   └─ allowOnNetworkError=true → Allowed(NETWORK_ERROR_ALLOWED)
- │           ├─ HTTP 404     → Denied(LICENSE_NOT_FOUND)
- │           ├─ HTTP 4xx/5xx → Denied(NETWORK_ERROR)
- │           ├─ meta.valid=true  → Allowed(LICENSE_VALID)
- │           └─ meta.valid=false → Denied(LICENSE_EXPIRED | SUSPENDED | INVALID …)
+ │           ├─ HTTP 404             → Denied(LICENSE_NOT_FOUND)
+ │           ├─ HTTP 401/403/429/5xx → Denied(NETWORK_ERROR)
+ │           ├─ 2xx + meta.valid=true → Allowed(LICENSE_VALID)
+ │           └─ anything else         → Denied(LICENSE_EXPIRED | SUSPENDED | INVALID …)
 ```
 
 **Fail-closed by default.** Any network error produces `Denied(NETWORK_ERROR)` unless the consumer explicitly opts in via `LicenseConfig.Builder#allowOnNetworkError(true)`.
 
-**`KeygenValidator.mapResponse()`** treats HTTP 200 with `meta.valid=false` as a normal denial (not an error), because Keygen returns 200 for expired/suspended keys and puts the outcome in the JSON body. HTTP 401/403 (bad API token) and 5xx surface as `NETWORK_ERROR` to avoid accidentally granting access due to misconfigured credentials.
+**`KeygenValidator.mapResponse()`** treats HTTP 200 with `meta.valid=false` as a normal denial (not an error), because Keygen returns 200 for expired/suspended keys and puts the outcome in the JSON body. HTTP 401/403 (bad API token), 429 and 5xx surface as `NETWORK_ERROR` to avoid accidentally granting access due to misconfigured credentials. Only a 2xx can produce `Allowed`: a 3xx/4xx body that says `valid=true` (an intercepting proxy, a misrouted base URI) is denied. `LemonSqueezyValidator` applies the same 2xx rule, and accepts `meta.store_id` / `meta.product_id` only as integer literals, so `42.9` is not store 42.
 
 ---
 
@@ -105,8 +105,9 @@ The recommended pattern is to instantiate one `LicenseGate` at application start
 | `AllowListEmailClassifierTest` | Exercises domain normalisation, IDN, and list overrides in isolation |
 | `consumer-fixture/` (separate Maven project) | Smoke-tests the library from the outside as a consumer dependency would see it |
 
-`LicenseConfig.mockMode(true)` and the injectable `httpClient(...)` are consumer-facing features
-that no test exercises. Nothing currently fails if either regresses.
+`LicenseConfig.mockMode(true)` is covered by `LicenseConfigTest` (builder placeholders, `toString`)
+and `LicenseGateLemonSqueezyTest` (the gate short-circuit). The injectable `httpClient(...)` is a
+consumer-facing feature that no test exercises; nothing fails if it regresses.
 
 Commands and the CI matrix are in [build-and-test.md](build-and-test.md).
 

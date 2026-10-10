@@ -27,6 +27,19 @@ class LemonSqueezyWebhookTest {
     }
 
     @Test
+    void rejectsTheRightDigestSpelledInNonAsciiDigits() {
+        // Character.digit accepts fullwidth and other Unicode digits, so one signature had many
+        // accepted spellings. A consumer de-duplicating deliveries by X-Signature could then be
+        // fed the same event again under a "new" signature.
+        StringBuilder fullwidth = new StringBuilder();
+        for (char c : REF_SIG.toCharArray()) {
+            fullwidth.append((char) (c <= '9' ? 0xFF10 + (c - '0') : 0xFF41 + (c - 'a')));
+        }
+        assertFalse(LemonSqueezyWebhook.verifySignature(
+            REF_BODY.getBytes(StandardCharsets.UTF_8), fullwidth.toString(), REF_SECRET));
+    }
+
+    @Test
     void rejectsTamperedBody() {
         assertFalse(LemonSqueezyWebhook.verifySignature(
             "HELLO".getBytes(StandardCharsets.UTF_8), REF_SIG, REF_SECRET));

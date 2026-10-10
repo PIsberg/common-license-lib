@@ -9,8 +9,9 @@ consumers see the project.
 | Thing | Version |
 | :--- | :--- |
 | Language level | Java 21 (`source`/`target` 21) |
-| Gradle wrapper | 9.6.1 |
-| JUnit | 6.1.2 |
+| Gradle wrapper | 9.8.1 |
+| JUnit | 6.1.3 |
+| VibeTags processor | 1.4.0 (same in `pom.xml` and `build.gradle.kts`) |
 | CI test matrix (Maven) | Java 21 and Java 25 |
 | CI test matrix (Gradle) | Java 21 |
 
@@ -64,9 +65,9 @@ No test reaches the public internet.
 The loopback server serves canned Keygen response bodies, so the tests exercise the real
 `HttpClient` code path including timeouts and status mapping.
 
-Two knobs on `LicenseConfig` exist for consumers but are **not covered by any test**:
-`mockMode(true)` and the injectable `httpClient(...)`. Nothing currently fails if either
-regresses. Worth a test before either is relied on.
+One knob on `LicenseConfig` exists for consumers but is **not covered by any test**: the
+injectable `httpClient(...)`. Nothing currently fails if it regresses. Worth a test before it is
+relied on. (`mockMode(true)` is covered by `LicenseConfigTest` and `LicenseGateLemonSqueezyTest`.)
 
 ## VibeTags in the build
 

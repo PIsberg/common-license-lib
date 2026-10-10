@@ -25,11 +25,29 @@ public final class LemonSqueezyCheckout {
      */
     public LemonSqueezyCheckout(String storeSubdomain) {
         Objects.requireNonNull(storeSubdomain, "storeSubdomain");
-        if (storeSubdomain.isBlank() || storeSubdomain.contains("/") || storeSubdomain.contains(".")) {
+        if (!isDnsLabel(storeSubdomain)) {
             throw new IllegalArgumentException(
-                "storeSubdomain must be the bare subdomain (no dots, no slashes): " + storeSubdomain);
+                "storeSubdomain must be the bare subdomain (letters, digits and '-' only): " + storeSubdomain);
         }
         this.storeSubdomain = storeSubdomain;
+    }
+
+    /**
+     * Allow-list, not a deny-list: any of {@code # ? @ : \} ends or splits the URL's authority, so
+     * {@code "localhost#"} would build a URL whose host is {@code localhost}, not the store.
+     */
+    private static boolean isDnsLabel(String s) {
+        if (s.isEmpty() || s.length() > 63) {
+            return false;
+        }
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            boolean ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-';
+            if (!ok) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

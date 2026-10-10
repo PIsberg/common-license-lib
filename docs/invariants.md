@@ -19,7 +19,8 @@ Declared on `internal.Json` and `keygen.KeygenValidator` as `@AIContext(avoids =
 ## Fail closed
 
 A Keygen 5xx, a 401 from a bad API token, a timeout or an `IOException` all map to
-`Denied(NETWORK_ERROR)`. Only `meta.valid=true` produces `Allowed`.
+`Denied(NETWORK_ERROR)`. Only a 2xx response with `meta.valid=true` produces `Allowed`; the
+same flag on a 3xx/4xx is a denial.
 
 Fail-open is the consumer's decision, taken explicitly with
 `LicenseConfig.Builder#allowOnNetworkError(true)`, and it is applied in `LicenseGate`, not in
@@ -63,8 +64,11 @@ Declared as `@AIThreadSafe(IMMUTABLE)` on `LicenseGate` and `@AIImmutable` on `L
 subtracts `additionalCommercialProviders`. Commercial always wins. Swap the order and a domain
 named in both lists silently becomes free, which is the failure that costs money.
 
-Domains are normalized to lowercase and punycoded with `IDN.toASCII` so international domains
-compare correctly.
+Domains are lowercased with `Locale.ROOT` and punycoded with `IDN.toASCII` so international
+domains compare correctly. Addresses and both override sets go through the same normalization:
+if they did not, a Unicode commercial override would fail to remove a punycode free entry for the
+same domain, and precedence would silently invert. Never call `toLowerCase()` without a locale:
+under a Turkish default locale `"GMAIL.COM"` becomes `"gmaıl.com"`.
 
 ## No global state
 

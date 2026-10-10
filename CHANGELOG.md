@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Build and CI dependencies bumped to the latest stable releases: VibeTags processor 1.4.0
+  (Maven was on 1.3.8, Gradle had drifted to 1.3.2 and generated different guardrail files),
+  JUnit 6.1.3 in the Gradle build and the downstream modules, Gradle wrapper 9.8.1,
+  `maven-compiler-plugin` 3.16.0 / `maven-surefire-plugin` 3.6.0 in the downstream modules,
+  `actions/upload-artifact` 7.0.2, `github/codeql-action` 4.38.3, `step-security/harden-runner`
+  2.22.1. No runtime dependency exists, so nothing changes for consumers of the jar.
+- Dependabot now also watches the Gradle build and the two downstream Maven modules.
+
+### Fixed
+
+- **`LicenseConfig.Builder` no longer writes mock placeholders back into itself.** `build()` with
+  `mockMode(true)` stored `"mocked"` in the builder's `keygenAccountId` and `keygenApiKey`, so a
+  later `mockMode(false).build()` on the same builder passed the required-field check and sent
+  real validations to a non-existent account with a bogus bearer token (which Keygen answers with
+  401, denying every customer). The placeholders now live only in the built config.
+- **Non-positive timeouts are rejected when configured.** `keygenTimeout(...)` and
+  `lemonSqueezyTimeout(...)` accepted `Duration.ZERO` or a negative value, which
+  `HttpRequest.Builder#timeout` then rejected on every `check()` with an
+  `IllegalArgumentException` instead of a result. The setters now throw
+  `IllegalArgumentException` up front.
+- **Email classification no longer depends on the JVM's default locale.** Domains were lowercased
+  with `String#toLowerCase()`, which under a Turkish default locale turns `GMAIL.COM` into
+  `gmaıl.com`: free-mail users were told to buy a license, and an upper-case
+  `additionalCommercialProviders` entry failed to remove its domain from the free set. All
+  lowercasing now uses `Locale.ROOT`.
+- **`additionalFreeProviders` / `additionalCommercialProviders` are IDN-normalized like addresses.**
+  Addresses were punycoded before lookup but overrides were not, so `bücher.example` as an override
+  never matched, and a Unicode commercial override could not remove the punycode free entry for the
+  same domain, inverting the documented "commercial wins" precedence.
+- **A deeply nested response body is now a `Denied(NETWORK_ERROR)`, not a thrown `Error`.** The
+  in-tree JSON parser recursed once per nesting level without a bound, so a body of a few hundred
+  kilobytes of `[` threw `StackOverflowError` out of `check()`, bypassing the fail-closed mapping
+  that only catches `IllegalArgumentException`. Nesting is now capped at 256 levels.
+- **Only a 2xx response can produce `Allowed`.** `KeygenValidator` and `LemonSqueezyValidator`
+  trusted `valid: true` in any response body that was not one of the explicitly mapped error
+  statuses, so a 302 or 400 page carrying that flag (an intercepting proxy, a misrouted base URI)
+  let the user through.
+- **`LemonSqueezyValidator` no longer truncates a non-integral `store_id`/`product_id`.** The
+  scope check used `Number#longValue()`, so `"store_id": 42.9` matched store 42. Only integer
+  literals count as scope evidence now.
+- **Webhook signatures accept ASCII hex only.** `LemonSqueezyWebhook` and `PaddleWebhook` decoded
+  hex with `Character.digit`, which also accepts fullwidth and other Unicode digits, so one valid
+  signature had many accepted spellings. A consumer de-duplicating deliveries by signature could be
+  replayed the same event under a "new" signature. Forgery was never possible; the HMAC comparison
+  is unchanged.
+- **Checkout identifiers are validated with allow-lists.** `LemonSqueezyCheckout` rejected only
+  `.` and `/` in the store subdomain, so `localhost#` built a URL whose host is `localhost`, not the
+  store (`?`, `@`, `:` and `\` split the authority the same way). The subdomain must now be a DNS
+  label: letters, digits and `-`, at most 63 characters. `PaddleCheckout` now requires `hsc_`
+  followed by at least one letter, digit or `_`; whitespace, `\` and `%` used to construct fine and
+  then fail on every `buildCheckoutUrl` call. A `LicenseConfig` with a malformed
+  `lemonSqueezyStoreSubdomain` now fails at `LicenseGate.of(...)` instead of at `checkoutUrl(...)`.
+- The JSON parser rejects `\u` escapes with a sign or non-ASCII hex digits (`\u-001` used to
+  decode to U+FFFF).
+- `LicenseConfig.toString()` now includes `mockMode`, the one flag that lets every user through.
+
 ## [0.5.0] - 2026-08-06
 
 ### Added — Paddle as a second commerce provider, and operator-side Keygen issuance

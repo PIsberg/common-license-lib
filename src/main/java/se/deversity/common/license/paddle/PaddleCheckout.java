@@ -47,13 +47,29 @@ public final class PaddleCheckout {
         }
         this.base = base;
         Objects.requireNonNull(hostedCheckoutId, "hostedCheckoutId");
-        if (!hostedCheckoutId.startsWith("hsc_")
-            || hostedCheckoutId.contains("/") || hostedCheckoutId.contains("?")
-            || hostedCheckoutId.contains("&") || hostedCheckoutId.contains("#")) {
+        if (!isHostedCheckoutId(hostedCheckoutId)) {
             throw new IllegalArgumentException(
-                "hostedCheckoutId must be a bare hsc_-prefixed id (no separators): " + hostedCheckoutId);
+                "hostedCheckoutId must be hsc_ followed by letters, digits or '_': " + hostedCheckoutId);
         }
         this.hostedCheckoutId = hostedCheckoutId;
+    }
+
+    /**
+     * Allow-list: a deny-list of separators let through whitespace, {@code \} and {@code %}, which
+     * then failed or built a broken URL on every {@link #buildCheckoutUrl} call instead of here.
+     */
+    private static boolean isHostedCheckoutId(String id) {
+        if (!id.startsWith("hsc_") || id.length() == "hsc_".length()) {
+            return false;
+        }
+        for (int i = "hsc_".length(); i < id.length(); i++) {
+            char c = id.charAt(i);
+            boolean ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
+            if (!ok) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

@@ -105,19 +105,13 @@ to `.claude/rules/`, which Claude Code loads only when it opens the matching sou
 
 <rule>Elements listed in <security_elements> are security-critical. Never weaken their security properties. Every proposed change must be explicitly reviewed for security impact.</rule>
   <scoped_rules>
-    <note>Detailed per-element guardrails for the elements below live in scoped rule files that load automatically when the matching source file is opened. Consult the referenced file before modifying an element.</note>
-    <element path="se.deversity.common.license.LicenseConfig" rules=".claude/rules/se-deversity-common-license-LicenseConfig.md"/>
-    <element path="se.deversity.common.license.LicenseGate" rules=".claude/rules/se-deversity-common-license-LicenseGate.md"/>
-    <element path="se.deversity.common.license.LicenseResult" rules=".claude/rules/se-deversity-common-license-LicenseResult.md"/>
-    <element path="se.deversity.common.license.email.AllowListEmailClassifier" rules=".claude/rules/se-deversity-common-license-email-AllowListEmailClassifier.md"/>
-    <element path="se.deversity.common.license.email.EmailClassifier" rules=".claude/rules/se-deversity-common-license-email-EmailClassifier.md"/>
-    <element path="se.deversity.common.license.email.FreeProviders" rules=".claude/rules/se-deversity-common-license-email-FreeProviders.md"/>
-    <element path="se.deversity.common.license.internal.Json" rules=".claude/rules/se-deversity-common-license-internal-Json.md"/>
-    <element path="se.deversity.common.license.keygen.KeygenIssuer" rules=".claude/rules/se-deversity-common-license-keygen-KeygenIssuer.md"/>
-    <element path="se.deversity.common.license.keygen.KeygenValidator" rules=".claude/rules/se-deversity-common-license-keygen-KeygenValidator.md"/>
-    <element path="se.deversity.common.license.lemonsqueezy.LemonSqueezyValidator" rules=".claude/rules/se-deversity-common-license-lemonsqueezy-LemonSqueezyValidator.md"/>
-    <element path="se.deversity.common.license.lemonsqueezy.LemonSqueezyWebhook" rules=".claude/rules/se-deversity-common-license-lemonsqueezy-LemonSqueezyWebhook.md"/>
-    <element path="se.deversity.common.license.paddle.PaddleWebhook" rules=".claude/rules/se-deversity-common-license-paddle-PaddleWebhook.md"/>
+    <note>Detailed per-element guardrails for the elements below live in scoped rule files that load automatically when the matching source file is opened. An elements entry lists names under a shared prefix: in="a.b" listing C, D means a.b.C and a.b.D. Unless an entry carries an explicit path, its file is .claude/rules/{path, every non-alphanumeric character replaced by &#39;-&#39;}.md. Consult the file before modifying an element.</note>
+    <elements in="se.deversity.common.license">LicenseConfig, LicenseGate, LicenseResult</elements>
+    <elements in="se.deversity.common.license.email">AllowListEmailClassifier, EmailClassifier, FreeProviders</elements>
+    <elements in="se.deversity.common.license.internal">Json</elements>
+    <elements in="se.deversity.common.license.keygen">KeygenIssuer, KeygenValidator</elements>
+    <elements in="se.deversity.common.license.lemonsqueezy">LemonSqueezyValidator, LemonSqueezyWebhook</elements>
+    <elements in="se.deversity.common.license.paddle">PaddleWebhook</elements>
   </scoped_rules>
 
 <rule>When you work on any element listed in <scoped_rules>, open its referenced rule file and apply the guardrails there. The rule files are the authoritative source for those elements.</rule>

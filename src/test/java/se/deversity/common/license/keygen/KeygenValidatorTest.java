@@ -161,6 +161,28 @@ class KeygenValidatorTest {
     }
 
     @Test
+    void validFlagOnANonSuccessStatusIsNotTrusted() {
+        // Only a 2xx is Keygen answering the question. A 4xx/3xx that happens to carry
+        // meta.valid=true (an intercepting proxy, a redirect page, a misrouted base URI) must
+        // not let the user through.
+        for (int status : new int[] {302, 400, 409, 422}) {
+            responseStatus = status;
+            responseBody = "{\"meta\":{\"valid\":true,\"code\":\"VALID\"}}";
+            LicenseResult r = newValidator().validate("KEY", "x@corp.com");
+            assertInstanceOf(LicenseResult.Denied.class, r, "HTTP " + status);
+        }
+    }
+
+    @Test
+    void mapsPathologicallyNestedBodyToNetworkError() {
+        // Must come back as a result, not as a StackOverflowError thrown out of validate().
+        responseStatus = 200;
+        responseBody = "{\"meta\":" + "[".repeat(200_000) + "]".repeat(200_000) + "}";
+        LicenseResult r = newValidator().validate("KEY", "x@corp.com");
+        assertEquals(DeniedReason.NETWORK_ERROR, ((LicenseResult.Denied) r).reason());
+    }
+
+    @Test
     void omitsAuthorizationHeaderWhenApiKeyIsNull() {
         responseStatus = 200;
         responseBody = "{\"meta\":{\"valid\":true,\"code\":\"VALID\"}}";

@@ -63,5 +63,11 @@ class PaddleCheckoutTest {
         assertThrows(IllegalArgumentException.class, () -> new PaddleCheckout("hsc_01abc?x=1"));
         assertThrows(IllegalArgumentException.class, () -> new PaddleCheckout("hsc_01abc#frag"));
         assertThrows(NullPointerException.class, () -> new PaddleCheckout(null));
+        // These used to construct fine and then fail (or build a broken URL) on every
+        // buildCheckoutUrl call: an empty id, whitespace, and characters URI.create rejects.
+        assertThrows(IllegalArgumentException.class, () -> new PaddleCheckout("hsc_"));
+        assertThrows(IllegalArgumentException.class, () -> new PaddleCheckout("hsc_01 abc"));
+        assertThrows(IllegalArgumentException.class, () -> new PaddleCheckout("hsc_01abc\\x"));
+        assertThrows(IllegalArgumentException.class, () -> new PaddleCheckout("hsc_01%2e%2e"));
     }
 }
