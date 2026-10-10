@@ -198,7 +198,9 @@ public final class LicenseConfig {
          * How the buyer's address is matched against the running user's. Defaults to
          * {@link LemonSqueezyValidator.EmailBinding#DOMAIN}, which is what a company licence needs:
          * one purchase by a billing address covers every developer on that domain. Switch to
-         * {@code EXACT} only for per-seat licensing.
+         * {@code EXACT} only for per-seat licensing. A buyer on a bundled free-mail domain is
+         * always matched exactly, so forcing {@code gmail.com} commercial does not let one gmail
+         * purchase cover every gmail user.
          */
         public Builder lemonSqueezyEmailBinding(LemonSqueezyValidator.EmailBinding v) {
             this.lemonSqueezyEmailBinding = Objects.requireNonNull(v, "lemonSqueezyEmailBinding");

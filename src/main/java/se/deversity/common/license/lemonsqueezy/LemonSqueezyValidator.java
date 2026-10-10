@@ -2,6 +2,7 @@ package se.deversity.common.license.lemonsqueezy;
 
 import se.deversity.common.license.LicenseResult;
 import se.deversity.common.license.LicenseResult.DeniedReason;
+import se.deversity.common.license.email.FreeProviders;
 import se.deversity.common.license.internal.Json;
 
 import java.io.IOException;
@@ -67,6 +68,12 @@ public final class LemonSqueezyValidator {
          * Any address on the buyer's email domain may use the licence. This is what makes a
          * company licence work: one purchase by {@code billing@acme.com} covers every developer
          * at {@code acme.com}, which is how organisations actually buy.
+         *
+         * <p>A buyer on a bundled free-mail domain such as {@code gmail.com} is matched exactly
+         * instead: a shared mailbox provider is not an organisation, so a purchase by
+         * {@code someone@gmail.com} covers only that address. This only matters when the consumer
+         * has forced such a domain into the commercial bucket, since free-mail users are
+         * otherwise let through before any key is validated.
          */
         DOMAIN,
         /**
@@ -213,6 +220,8 @@ public final class LemonSqueezyValidator {
      * <p>{@link EmailBinding#DOMAIN} is what makes a company licence usable: one purchase by
      * {@code billing@acme.com} covers every developer at {@code acme.com}. Under
      * {@link EmailBinding#EXACT} only the buyer can run, which suits per-seat licensing.
+     * A buyer on a bundled free-mail domain ({@link FreeProviders#bundled()}) is matched exactly
+     * under either binding.
      */
     private boolean emailMatches(String customerEmail, String userEmail) {
         if (customerEmail == null || userEmail == null) {
@@ -227,7 +236,13 @@ public final class LemonSqueezyValidator {
         String userDomain = domainOf(user);
         // A blank domain on either side means an address we could not parse. Fail closed rather
         // than let two unparseable addresses "match" each other.
-        return buyerDomain != null && buyerDomain.equals(userDomain);
+        if (buyerDomain == null || !buyerDomain.equals(userDomain)) {
+            return false;
+        }
+        // A shared mailbox provider is not an organisation. Free-mail users normally never get
+        // here, but a consumer can force gmail.com commercial, and then one gmail purchase would
+        // license every gmail user. Those domains bind to the exact buyer instead.
+        return !FreeProviders.bundled().contains(buyerDomain) || buyer.equalsIgnoreCase(user);
     }
 
     /** Lower-cased domain part of an address, or {@code null} if it has no single {@code @}. */

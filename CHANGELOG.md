@@ -69,6 +69,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   one second slow rejected fresh webhooks until Paddle retried them. The window is now symmetric:
   `ts` may be up to `maxAgeSeconds` behind or ahead. The past side, which is where a replay comes
   from, is unchanged.
+- **A LemonSqueezy licence bought from a free-mail address no longer covers the whole provider.**
+  Under the default `EmailBinding.DOMAIN`, a consumer that forced `gmail.com` commercial with
+  `additionalCommercialProviders` let one purchase by `someone@gmail.com` license every gmail user.
+  A buyer on a bundled free-mail domain is now matched by exact address under either binding.
 
 ## [0.5.0] - 2026-08-06
 

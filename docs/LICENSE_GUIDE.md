@@ -14,6 +14,12 @@ If you are a commercial user of a software product using this library, you will 
     - Available in your **Lemon Squeezy Customer Portal** under "My Orders".
 4.  **Activate**: Provide the license key to the application when prompted, or configure it via the relevant environment variable (e.g., `LICENSE_KEY`).
 
+### Who a Lemon Squeezy license covers
+
+By default (`EmailBinding.DOMAIN`) a license covers every address on the buyer's email domain: one purchase by `billing@acme.com` covers every developer at `acme.com`. `EmailBinding.EXACT` restricts it to the buyer's own address, for per-seat licensing.
+
+A buyer on a free-mail domain from the bundled list (`gmail.com`, `outlook.com` and so on) is always matched exactly, whichever binding is set. Free-mail users normally need no license at all, but an application can force such a domain to require one with `additionalCommercialProviders`; a purchase by `someone@gmail.com` then covers `someone@gmail.com` only, not every gmail user.
+
 ---
 
 ## 2. Admin Setup: Finding Credentials

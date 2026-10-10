@@ -12,6 +12,7 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -101,6 +102,25 @@ class LicenseGateLemonSqueezyTest {
         assertEquals(LicenseResult.AllowedReason.FREE_PROVIDER_EMAIL,
             ((LicenseResult.Allowed) r).reason());
         assertNull(lastPath.get(), "no request should have been made");
+    }
+
+    @Test
+    void freeMailDomainForcedCommercialIsNotLicensedWholesaleByOneBuyer() {
+        // The consumer forced gmail.com into the commercial bucket, and someone@gmail.com bought a
+        // licence. Under the default DOMAIN binding that key must not unlock every gmail user.
+        responseStatus = 200;
+        responseBody = validPayload("someone@gmail.com");
+        LicenseGate gate = LicenseGate.of(LicenseConfig.builder()
+            .licenseProvider(LicenseConfig.Provider.LEMONSQUEEZY)
+            .lemonSqueezyStoreId(OUR_STORE)
+            .lemonSqueezyBaseUri(baseUri)
+            .lemonSqueezyTimeout(Duration.ofSeconds(3))
+            .additionalCommercialProviders(Set.of("gmail.com"))
+            .build());
+
+        assertEquals(LicenseResult.DeniedReason.LICENSE_INVALID,
+            ((LicenseResult.Denied) gate.check("stranger@gmail.com", "KEY-OK")).reason());
+        assertInstanceOf(LicenseResult.Allowed.class, gate.check("someone@gmail.com", "KEY-OK"));
     }
 
     @Test
