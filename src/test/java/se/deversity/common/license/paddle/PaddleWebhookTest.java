@@ -104,9 +104,39 @@ class PaddleWebhookTest {
     }
 
     @Test
-    void replayCheckRejectsFutureEvent() {
+    void replayCheckAcceptsEventWhenLocalClockIsSlightlyBehind() {
+        // Receiver's clock runs 5 s behind Paddle's: the event is fresh, not a replay.
         Clock now = Clock.fixed(Instant.ofEpochSecond(1671552777L - 5), ZoneOffset.UTC);
+        assertTrue(PaddleWebhook.verifySignature(body(), REF_HEADER, REF_SECRET, 60, now));
+    }
+
+    @Test
+    void replayCheckAcceptsEventExactlyMaxAgeAhead() {
+        Clock now = Clock.fixed(Instant.ofEpochSecond(1671552777L - 60), ZoneOffset.UTC);
+        assertTrue(PaddleWebhook.verifySignature(body(), REF_HEADER, REF_SECRET, 60, now));
+    }
+
+    @Test
+    void replayCheckRejectsEventMoreThanMaxAgeAhead() {
+        Clock now = Clock.fixed(Instant.ofEpochSecond(1671552777L - 61), ZoneOffset.UTC);
         assertFalse(PaddleWebhook.verifySignature(body(), REF_HEADER, REF_SECRET, 60, now));
+    }
+
+    @Test
+    void replayCheckWithZeroMaxAgeAcceptsOnlyTheExactSecond() {
+        long ts = 1671552777L;
+        assertTrue(PaddleWebhook.verifySignature(body(), REF_HEADER, REF_SECRET, 0,
+            Clock.fixed(Instant.ofEpochSecond(ts), ZoneOffset.UTC)));
+        assertFalse(PaddleWebhook.verifySignature(body(), REF_HEADER, REF_SECRET, 0,
+            Clock.fixed(Instant.ofEpochSecond(ts - 1), ZoneOffset.UTC)));
+        assertFalse(PaddleWebhook.verifySignature(body(), REF_HEADER, REF_SECRET, 0,
+            Clock.fixed(Instant.ofEpochSecond(ts + 1), ZoneOffset.UTC)));
+    }
+
+    @Test
+    void replayCheckRejectsEventFarInTheFuture() {
+        Clock now = Clock.fixed(Instant.ofEpochSecond(0), ZoneOffset.UTC);
+        assertFalse(PaddleWebhook.verifySignature(body(), REF_HEADER, REF_SECRET, 300, now));
     }
 
     @Test

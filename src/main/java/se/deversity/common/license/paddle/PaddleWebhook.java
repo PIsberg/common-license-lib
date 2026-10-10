@@ -62,10 +62,16 @@ public final class PaddleWebhook {
 
     /**
      * As {@link #verifySignature(byte[], String, String)}, additionally rejecting events whose
-     * {@code ts} is more than {@code maxAgeSeconds} behind {@code clock} (or any amount ahead
-     * of it), which closes the replay window.
+     * {@code ts} is more than {@code maxAgeSeconds} away from {@code clock} in either direction,
+     * which closes the replay window.
      *
-     * @param maxAgeSeconds maximum accepted age of the event; must be {@code >= 0}
+     * <p>The window is symmetric so that a receiver whose clock runs a few seconds behind
+     * Paddle's does not reject fresh events. Accepting a {@code ts} ahead of the local clock does
+     * not widen the replay window: only Paddle can sign a {@code ts}, and a replay is always of
+     * an older one.
+     *
+     * @param maxAgeSeconds maximum accepted distance between {@code ts} and the clock, in
+     *                      seconds; must be {@code >= 0}
      * @param clock         source of "now"; pass {@link Clock#systemUTC()} in production
      */
     public static boolean verifySignature(byte[] rawBody, String paddleSignatureHeader,
@@ -113,7 +119,8 @@ public final class PaddleWebhook {
                 return false;
             }
             long now = clock.instant().getEpochSecond();
-            if (eventTs > now || now - eventTs > maxAgeSeconds) {
+            // Symmetric: a receiver clock slightly behind Paddle's is skew, not a replay.
+            if (now - eventTs > maxAgeSeconds || eventTs - now > maxAgeSeconds) {
                 return false;
             }
         }

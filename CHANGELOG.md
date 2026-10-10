@@ -64,6 +64,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The JSON parser rejects `\u` escapes with a sign or non-ASCII hex digits (`\u-001` used to
   decode to U+FFFF).
 - `LicenseConfig.toString()` now includes `mockMode`, the one flag that lets every user through.
+- **`PaddleWebhook`'s replay check tolerates a receiver clock that runs behind Paddle's.** The
+  `maxAgeSeconds` overload rejected any `ts` ahead of the local clock, so a server whose clock was
+  one second slow rejected fresh webhooks until Paddle retried them. The window is now symmetric:
+  `ts` may be up to `maxAgeSeconds` behind or ahead. The past side, which is where a replay comes
+  from, is unchanged.
 
 ## [0.5.0] - 2026-08-06
 
