@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-10
+
+A correctness and hardening release with no new API outside the `internal` package. Most of the
+fixes close a path where input the library did not expect (a non-2xx body claiming
+`valid: true`, a Turkish default locale, Unicode digits in a signature, a deeply nested JSON body,
+a crafted store subdomain) produced an answer other than the documented one. Two changes move a
+failure earlier: non-positive timeouts and a malformed `lemonSqueezyStoreSubdomain` now throw at
+configuration time instead of on every `check()` or `checkoutUrl(...)` call.
+
 ### Changed
 
 - Build and CI dependencies bumped to the latest stable releases: VibeTags processor 1.4.0
