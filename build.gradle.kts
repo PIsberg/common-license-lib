@@ -17,7 +17,7 @@ repositories {
 }
 
 val junitVersion = "6.1.3"
-val vibetagsVersion = "1.4.0"
+val vibetagsVersion = "1.4.1"
 
 dependencies {
     // Compile-time only. VibeTags annotations are RetentionPolicy.SOURCE, so nothing
